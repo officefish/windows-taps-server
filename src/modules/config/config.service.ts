@@ -44,4 +44,16 @@ export class AppConfigService {
   getDefaultArtPath(): string {
     return this.configService.get('DEFAULT_ART')
   }
+
+  getJwtAccessTime(): string {
+    return this.configService.get('JWT_ACCESS_TIME')
+  }
+
+  getJwtRefreshTime(): string {
+    return this.configService.get('JWT_REFRESH_TIME')
+  }
+
+  getJwtResetTime(): string {
+    return this.configService.get('JWT_RESET_TIME')
+  }
 }

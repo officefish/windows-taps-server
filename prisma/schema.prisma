@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  // previewFeatures = ["prismaSchemaFolder"]
 }
 
 datasource db {
@@ -16,4 +17,52 @@ model User {
   name          String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+}
+
+enum AccountType {
+    PREMIUM
+    COMMON
+}
+
+model Player {
+  id                    String                  @id @default(auto()) @map("_id") @db.ObjectId
+  honeyLatest           Float                   @default(0) @map("honey_latest")
+  honeyMax              Float                   @default(0) @map("honey_max")
+  balance               Float                   @default(0)
+  lastLogin             DateTime?               @map("last_login")
+  lastLogout            DateTime?               @map("last_logout")
+  levelId               String?                 @map("level_id")
+  referredById          String?                 @map("referred_by_id")
+  //rank                  Ranks?                  @relation(fields: [rankId], references: [id])
+  rankId                String?                 @map("rank_id")
+  tgId                  String                  @map("tg_id")
+  isPremium             Boolean                 @map("is_premium")
+  userName              String                  @map("user_name")
+  referralProfit        Float?                  @default(0) @map("referral_profit")
+  bossStreak            Int?                    @default(0)
+  lastBossDate          DateTime?               @map("last_boss_date")
+  createdAt             DateTime?               @default(now()) @map("created_at")
+  farmingDate           DateTime?
+  //referralsEarlyBonuses ReferralsEarlyBonuses[]
+  token                 PlayerTokens?
+  //playerBonuses         PlayerBonuses[]
+  //playersOrcs           PlayersOrcs[]
+  //playersQuests         PlayersQuests[]
+  //referralsProfit       ReferralsProfit?
+  //ReferralsQuestProfit  ReferralsQuestProfit?
+  //Referrals             Referrals[]
+  //PlayerRanks           PlayerRanks[]
+
+}
+
+model PlayerTokens {
+    id           String    @id @default(auto()) @map("_id") @db.ObjectId
+    accessToken  String?
+    refreshToken String    
+    createdAt    DateTime? @default(now()) @map("created_at")
+    updatedAt    DateTime? @updatedAt @map("updated_at")
+    player       Player    @relation(fields: [playerId], references: [id])
+    playerId     String    @db.ObjectId @unique
+
+    @@map("player_tokens")
 }
