@@ -1,7 +1,64 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Player } from '@prisma/client'
 
-export class PlayerType implements Player {
+export enum AccountType {
+  PREMIUM,
+  COMMON
+}
+
+export class PlayerMinType {
+  @ApiProperty({ description: 'Unique identifier for the player', example: '507f1f77bcf86cd799439011' })
+  id: string;
+
+  @ApiProperty({ description: 'Date and time when the player was created', example: '2023-09-01T12:34:56Z', nullable: true })
+  createdAt: Date;
+
+  @ApiProperty({ description: 'Telegram ID of the player', example: '1234567890' })
+  tgId: string;
+
+  @ApiProperty({ description: 'Indicates if the player has a premium account', example: true })
+  isPremium: boolean;
+
+  @ApiProperty({ description: 'Username of the player', example: 'player123' })
+  userName: string;
+
+  @ApiProperty({ description: 'Player balance', example: 100.0 })
+  balance: number;
+
+  @ApiProperty({ description: 'Latest honey amount collected by the player', example: 50.0 })
+  honeyLatest: number;
+
+  @ApiProperty({ description: 'Maximum honey amount collected by the player', example: 150.0 })
+  honeyMax: number;
+
+  @ApiProperty({ description: 'Date and time of the player\'s last login', example: '2023-09-01T12:34:56Z', nullable: true })
+  lastLogin: Date;
+
+  @ApiProperty({ description: 'Date and time of the player\'s last logout', example: '2023-09-01T14:34:56Z', nullable: true })
+  lastLogout: Date;
+
+  @ApiProperty({ description: 'Level ID of the player', example: 'level1', nullable: true })
+  levelId: string;
+
+  @ApiProperty({ description: 'Profit earned from referrals', example: 10.0, nullable: true })
+  referralProfit: number;
+
+  @ApiProperty({ description: 'Rank ID of the player', example: 'rank1', nullable: true })
+  rankId: string | null;
+
+  @ApiProperty({ description: 'ID of the player who invited this player', example: '507f1f77bcf86cd799439013', nullable: true })
+  invitedById: string | null;
+}
+
+export class PlayerType extends PlayerMinType implements Player {
+
+  @ApiProperty({ description: 'Array of players invited by this player', type: [PlayerType], nullable: true })
+  referrals: PlayerType[];
+
+  @ApiProperty({ description: 'Count of referrals made by the player', example: 10 })
+  referralCount: number;
+  
+  /* 
   @ApiProperty({
     description: 'Unique identifier for the player',
     example: '123e4567-e89b-12d3-a456-426614174000',
@@ -94,4 +151,6 @@ export class PlayerType implements Player {
 
   @ApiProperty({ description: 'Farming date of the player', example: 500.0 })
   farmingDate: Date;
+  */
 }
+

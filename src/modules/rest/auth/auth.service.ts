@@ -17,11 +17,9 @@ import {
   import { PlayerLoginDto } from './dto'
   import { PlayerLoginResponse } from './responses'
 
-  import { ReferralsService } from '@/modules/referrals/referrals.service'
-  import { CreateReferralEarlyBonusDto } from '@/modules/referrals/dto/createReferralEarlyBonus.dto'
-  
-  import { AccountType } from '@prisma/client'
-  
+  import { ReferralsService } from '@/modules/rest/referrals/referrals.service'
+  //import { CreateReferralEarlyBonusDto } from '@/modules/rest/referrals/dto/'
+    
   @Injectable()
   export class AuthService {
     private logger = new Logger(AuthService.name);
@@ -76,12 +74,12 @@ import {
           where: { id: referrerId },
         });
         const referralCount = await this.prismaService.player.count({
-          where: { referredById: referrerId },
+          where: { invitedById: referrerId },
         });
   
-        await this.prismaService.referral.create({
-          data: { referralId: player.id, referrerId: referrer.id },
-        });
+        // await this.prismaService.referral.create({
+        //   data: { referralId: player.id, referrerId: referrer.id },
+        // });
   
         if (!referrer) {
           return {
@@ -91,22 +89,22 @@ import {
             isNew: true,
           };
         }
-        const referralDto: CreateReferralEarlyBonusDto = {
-          honey: 0,
-          accountType: AccountType.COMMON
-            ? this.configService.getOrThrow('COMMON_ACC_BONUS')
-            : this.configService.getOrThrow('PREMIUM_ACC_BONUS'),
-        };
+        // const referralDto: CreateReferralEarlyBonusDto = {
+        //   honey: 0,
+        //   accountType: 'COMMON'
+        //     ? this.configService.getOrThrow('COMMON_ACC_BONUS')
+        //     : this.configService.getOrThrow('PREMIUM_ACC_BONUS'),
+        // };
   
-        await this.referralService.calculateReferralProfit(
-          referralDto,
-          referrer.id,
-        );
+        // await this.referralService.calculateReferralProfit(
+        //   referralDto,
+        //   referrer.id,
+        // );
   
-        await this.referralService.handleNewRegistration(
-          referrer.id,
-          referralCount,
-        );
+        // await this.referralService.handleNewRegistration(
+        //   referrer.id,
+        //   referralCount,
+        // );
   
         return {
           message: 'Player registered successfully!',

@@ -1,8 +1,8 @@
 import { PickType } from '@nestjs/swagger'
 import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator'
-import { PlayersType } from '../types'
+import { PlayerType } from '../types'
 
-export class PlayerDto extends PickType(PlayersType, [
+export class PlayerDto extends PickType(PlayerType, [
   'userName',
   'tgId',
   'isPremium',
