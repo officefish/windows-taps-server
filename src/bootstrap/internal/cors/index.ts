@@ -19,9 +19,20 @@ export function initializeCors(app: INestApplication) {
           methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
         }
 
-        // include CORS headers for requests from localhost
+        const allowedOrigins = [
+          'https://web.telegram.org', // Домен Web Telegram App
+          'http://localhost:3000',    // Домен для локальной разработки, если нужно
+          // Можно добавить другие домены, если требуется
+        ];
+        // Проверяем заголовок Origin
+        if (allowedOrigins.includes(req.headers.origin || '')) {
+          corsOptions.origin = true;
+        }
+    
+
+        // // include CORS headers for requests from localhost
         if (/localhost/.test(req.headers.origin)) {
-          corsOptions.origin = true
+           corsOptions.origin = true
         }
 
         // callback expects two parameters: error and options
