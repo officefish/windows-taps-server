@@ -16,7 +16,7 @@ import { JwtModule } from '@nestjs/jwt'
           inject: [AppConfigService],
         }),
       ],
-  providers: [TokenService],
+  providers: [TokenService, AppConfigService],
   exports: [TokenService],
 })
 export class TokenModule {}

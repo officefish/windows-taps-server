@@ -56,4 +56,8 @@ export class AppConfigService {
   getJwtResetTime(): string {
     return this.configService.get('JWT_RESET_TIME')
   }
+
+  getTelegramBotToken(): string {
+    return this.configService.get('TELEGRAM_BOT_TOKEN')
+  }
 }

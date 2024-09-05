@@ -15,12 +15,40 @@ import {
 import { PlayerRefreshResponse, PlayerLoginResponse } from './responses'
 
 import { PlayerLoginDto } from './dto'
+import { TelegramInitDataDto } from './dto/telegram-initial.dto'
+import { TelegramService } from '@/modules/telegram/telegram.service'
 
 @ApiTags('auth')
 @Public()
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly telegramService: TelegramService
+  ) {}
+
+  @Post('register')
+  async register(
+    @Body() initial: TelegramInitDataDto,
+  ): Promise<PlayerLoginResponse> {
+
+    const valid = this.telegramService.validateInitData(initial.initData);
+    if (!valid) {
+      return {
+        message: 'Invalid Telegram Init Data',
+        player: null,
+      }
+    }
+
+    const userData = this.telegramService.extractUserData(initial.initData);
+    const dto = {
+      tgId: userData.id,
+      username: userData.username,
+      isPremium: false,
+    } as unknown as PlayerLoginDto
+
+    return await this.authService.registerOrLogin(dto, null);
+  }
 
   @PlayerLoginOperation()
   @HttpCode(200)
