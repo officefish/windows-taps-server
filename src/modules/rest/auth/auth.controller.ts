@@ -1,5 +1,14 @@
-import { Body, Controller, Get, HttpCode, Post, Query } from '@nestjs/common'
-import { ApiTags } from '@nestjs/swagger'
+import { 
+  Body, 
+  Controller, 
+  ForbiddenException, 
+  Get, 
+  HttpCode, 
+  Options, 
+  Post, 
+  Query 
+} from '@nestjs/common'
+import { ApiResponse, ApiTags } from '@nestjs/swagger'
 
 import { Public } from '@/common/decorators/is-public.decorator'
 import { Cookies } from '@/common/decorators/get-cookie.decorator'
@@ -27,17 +36,27 @@ export class AuthController {
     private readonly telegramService: TelegramService
   ) {}
 
+  @ApiResponse({
+    status: 200,
+    description: 'User successfully registered or logged in',
+    type: PlayerLoginResponse,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Invalid Telegram Init Data',
+  })
+
   @Post('register')
   async register(
     @Body() initial: TelegramInitDataDto,
   ): Promise<PlayerLoginResponse> {
 
+    console.log(`initData: ${initial.initData}`)
+
     const valid = this.telegramService.validateInitData(initial.initData);
     if (!valid) {
-      return {
-        message: 'Invalid Telegram Init Data',
-        player: null,
-      }
+      // Возвращаем 403 ошибку если данные невалидные
+      throw new ForbiddenException('Invalid Telegram Init Data');
     }
 
     const userData = this.telegramService.extractUserData(initial.initData);
@@ -48,6 +67,15 @@ export class AuthController {
     } as unknown as PlayerLoginDto
 
     return await this.authService.registerOrLogin(dto, null);
+  }
+
+  @Options('register')
+  @ApiResponse({
+    status: 204,
+    description: 'CORS preflight check for register endpoint',
+  })
+  async options() {
+    return; // Возвращаем успешный ответ для preflight
   }
 
   @PlayerLoginOperation()

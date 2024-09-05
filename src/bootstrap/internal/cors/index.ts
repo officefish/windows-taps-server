@@ -16,7 +16,7 @@ export function initializeCors(app: INestApplication) {
           origin: false,
           credentials: true,
           preflightContinue: true,
-          methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+          methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
         }
 
         const allowedOrigins = [
