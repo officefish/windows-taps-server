@@ -6,15 +6,18 @@ import {
   HttpCode, 
   Options, 
   Post, 
-  Query 
+  Query, 
+  Res
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
+import { FastifyReply } from 'fastify'
 
 import { Public } from '@/common/decorators/is-public.decorator'
 import { Cookies } from '@/common/decorators/get-cookie.decorator'
 import { SuccessMessageType } from '@/helpers/common/types'
 
 import { AuthService } from './auth.service'
+
 
 import { 
   PlayerLogoutOperation,
@@ -74,7 +77,7 @@ export class AuthController {
     status: 204,
     description: 'CORS preflight check for register endpoint',
   })
-  async options() {
+  async options(@Res() reply: FastifyReply) {
     return; // Возвращаем успешный ответ для preflight
   }
 
