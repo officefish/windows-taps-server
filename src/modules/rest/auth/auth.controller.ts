@@ -63,6 +63,9 @@ export class AuthController {
     }
 
     const userData = this.telegramService.extractUserData(initial.initData);
+
+    console.log(userData)
+
     const dto = {
       tgId: userData.id,
       username: userData.username,
@@ -78,7 +81,7 @@ export class AuthController {
     description: 'CORS preflight check for register endpoint',
   })
   async options(@Res() reply: FastifyReply) {
-    return; // Возвращаем успешный ответ для preflight
+    return reply.status(204).send(); // Возвращаем успешный ответ для preflight
   }
 
   @PlayerLoginOperation()

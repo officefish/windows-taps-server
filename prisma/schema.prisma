@@ -29,7 +29,7 @@ model Player {
   createdAt             DateTime?               @default(now()) @map("created_at")
   tgId                  String                  @map("tg_id")
   isPremium             Boolean                 @map("is_premium")
-  userName              String                  @map("user_name")
+  username              String                  @map("user_name")
 
   balance               Float                   @default(0)  
   honeyLatest           Float                   @default(0) @map("honey_latest")

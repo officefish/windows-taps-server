@@ -21,7 +21,9 @@ export function initializeCors(app: INestApplication) {
 
         const allowedOrigins = [
           'https://web.telegram.org', // Домен Web Telegram App
-          'http://localhost:3000',    // Домен для локальной разработки, если нужно
+          'http://localhost:3000', 
+          'https://windows-taps-pewz.vercel.app',
+          // Домен для локальной разработки, если нужно
           // Можно добавить другие домены, если требуется
         ];
         // Проверяем заголовок Origin
