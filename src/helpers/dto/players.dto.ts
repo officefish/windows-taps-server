@@ -3,16 +3,26 @@ import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator'
 import { PlayerType } from '../types'
 
 export class PlayerDto extends PickType(PlayerType, [
-  'userName',
+  'username',
   'tgId',
   'isPremium',
   'balance',
   'honeyLatest',
   'honeyMax',
+  'firstName',
+  'secondName'
 ] as const) {
   @IsNotEmpty()
   @IsString()
-  userName: string;
+  username: string;
+
+  @IsNotEmpty()
+  @IsString()
+  firstName: string;
+
+  @IsNotEmpty()
+  @IsString()
+  secondName: string;
 
   @IsNotEmpty()
   @IsString()

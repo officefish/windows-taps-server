@@ -2,7 +2,9 @@ import { PickType } from '@nestjs/swagger'
 import { PlayerDto } from '@/helpers/dto'
 
 export class PlayerLoginDto extends PickType(PlayerDto, [
-  'userName',
+  'username',
+  'firstName',
+  'secondName',
   'tgId',
   'isPremium',
 ] as const) {}

@@ -7,7 +7,7 @@ export class PlayersTokenDto {
 
   constructor(entity: Player) {
     this.id = entity.id;
-    this.userName = entity.userName;
+    this.userName = entity.username;
     this.tgId = entity.tgId;
   }
 }

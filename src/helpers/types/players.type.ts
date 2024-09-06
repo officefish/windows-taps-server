@@ -20,7 +20,13 @@ export class PlayerMinType {
   isPremium: boolean;
 
   @ApiProperty({ description: 'Username of the player', example: 'player123' })
-  userName: string;
+  username: string;
+
+  @ApiProperty({ description: 'First name of the player', example: 'Sergey' })
+  firstName: string;
+
+  @ApiProperty({ description: 'First name of the player', example: 'Inozemcev' })
+  secondName: string;
 
   @ApiProperty({ description: 'Player balance', example: 100.0 })
   balance: number;

@@ -36,12 +36,12 @@ import {
     ): Promise<PlayerLoginResponse> {
       this.logger.log('Попытка регистрации или входа пользователя...');
       const candidate = await this.prismaService.player.findFirst({
-        where: { tgId: dto.tgId, userName: dto.userName },
+        where: { tgId: dto.tgId, username: dto.username },
       });
   
       if (candidate) {
         this.logger.log(
-          `Пользователь ${candidate.userName} найден, выполняется вход...`,
+          `Пользователь ${candidate.username} найден, выполняется вход...`,
         );
         const tokens = this.tokenService.generateTokens({
           ...new PlayersTokenDto(candidate),
