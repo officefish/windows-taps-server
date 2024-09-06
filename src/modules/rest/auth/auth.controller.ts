@@ -70,6 +70,8 @@ export class AuthController {
       tgId: userData.id,
       username: userData.username,
       isPremium: false,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
     } as unknown as PlayerLoginDto
 
     return await this.authService.registerOrLogin(dto, null);

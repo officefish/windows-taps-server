@@ -68,8 +68,8 @@ export class TelegramService {
     // Map the parsed data to the TelegramUserType and return it
     const user: TelegramUserType = {
       id: userData.id.toString(),
-      first_name: userData.first_name,
-      last_name: userData.last_name || undefined,
+      firstName: userData.first_name,
+      lastName: userData.last_name || undefined,
       username: userData.username || undefined,
       language_code: userData.language_code || undefined,
       allows_write_to_pm: userData.allows_write_to_pm || undefined,

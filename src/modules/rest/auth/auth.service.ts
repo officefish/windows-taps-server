@@ -55,6 +55,9 @@ import {
       }
   
       this.logger.log('Пользователь не найден, выполняется регистрация...');
+
+      console.log(dto)
+      
       const player = await this.prismaService.player.create({
         data: {
           ...dto,

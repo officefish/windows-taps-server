@@ -4,7 +4,7 @@ import { PlayerDto } from '@/helpers/dto'
 export class PlayerLoginDto extends PickType(PlayerDto, [
   'username',
   'firstName',
-  'secondName',
+  'lastName',
   'tgId',
   'isPremium',
 ] as const) {}

@@ -10,12 +10,12 @@ export class TelegramUserType {
 
   @ApiProperty({ description: 'User\'s first name', example: 'John' })
   @IsString()
-  first_name: string;
+  firstName: string;
 
   @ApiProperty({ description: 'User\'s last name', example: 'Doe', required: false })
   @IsOptional()
   @IsString()
-  last_name?: string;
+  lastName?: string;
 
   @ApiProperty({ description: 'User\'s username', example: 'johndoe', required: false })
   @IsOptional()

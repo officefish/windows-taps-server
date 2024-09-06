@@ -32,7 +32,7 @@ model Player {
   username              String                  @map("user_name")
 
   firstName             String                  @map("first_name")
-  secondName            String                  @map("second_name")
+  lastName            String                  @map("last_name")
 
   balance               Float                   @default(0)  
   honeyLatest           Float                   @default(0) @map("honey_latest")

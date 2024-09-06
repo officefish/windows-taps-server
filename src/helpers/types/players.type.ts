@@ -25,8 +25,8 @@ export class PlayerMinType {
   @ApiProperty({ description: 'First name of the player', example: 'Sergey' })
   firstName: string;
 
-  @ApiProperty({ description: 'First name of the player', example: 'Inozemcev' })
-  secondName: string;
+  @ApiProperty({ description: 'Lasr name of the player', example: 'Inozemcev' })
+  lastName: string;
 
   @ApiProperty({ description: 'Player balance', example: 100.0 })
   balance: number;
