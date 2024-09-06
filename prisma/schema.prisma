@@ -27,7 +27,7 @@ enum AccountType {
 model Player {
   id                    String                  @id @default(auto()) @map("_id") @db.ObjectId
   createdAt             DateTime?               @default(now()) @map("created_at")
-  tgId                  String                  @map("tg_id")
+  tgId                  String                  @map("tg_id") @unique
   isPremium             Boolean                 @map("is_premium")
   username              String                  @map("user_name")
 
@@ -40,8 +40,13 @@ model Player {
   lastName              String                  @map("last_name")
 
   balance               Float                   @default(0)  
-  honeyLatest           Float                   @default(300) @map("honey_latest")
-  honeyMax              Float                   @default(300) @map("honey_max")
+
+  energyLatest           Float                   @default(300) @map("honey_latest")
+  energyMax              Float                   @default(300) @map("honey_max")
+  // Скорость восстановления энергии в единицах/секундах
+  recoveryRate          Float                   @default(5) @map("recovery_rate")
+  // Время последнего обновления энергии
+  lastEnergyUpdate      DateTime                @default(now()) @map("last_energy_update")
 
   lastLogin             DateTime?               @map("last_login")
   lastLogout            DateTime?               @map("last_logout")

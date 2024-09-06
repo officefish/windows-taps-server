@@ -11,6 +11,7 @@ export function initializeSwagger(app: INestApplication) {
     .setContact('Sergey Inozemcev', 'https://t.me/indiecaps', 'indicogames@yandex.ru')
     .addBearerAuth()
     .addTag('auth')
+    .addTag('player')
     .addTag('ping-pong')
     .build()
   patchNestJsSwagger()

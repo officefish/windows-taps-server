@@ -19,8 +19,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "ngrok":"ngrok http http://localhost:8001"
-
+    "ngrok": "ngrok http http://localhost:8001"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
@@ -32,6 +31,7 @@
     "@nestjs/microservices": "^10.4.1",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/platform-fastify": "^10.4.1",
+    "@nestjs/schedule": "^4.1.0",
     "@nestjs/swagger": "^7.4.0",
     "@prisma/client": "^5.18.0",
     "@sentry/nestjs": "^8.26.0",

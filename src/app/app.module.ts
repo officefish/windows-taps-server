@@ -5,6 +5,8 @@ import { SentryModule } from '@sentry/nestjs/setup'
 import { PingPongModule } from '@/modules/rest/ping-pong/ping-pong.module'
 import { AuthModule } from '@/modules/rest/auth/auth.module'
 import { TelegramModule } from '@/modules/telegram/telegram.module'
+import { GameplayModule } from '@/modules/gameplay/gameplay.module'
+import { PlayerModule } from '@/modules/rest/player/player.module'
 
 
 @Module({
@@ -15,6 +17,8 @@ import { TelegramModule } from '@/modules/telegram/telegram.module'
     SentryModule.forRoot(),
     PingPongModule,
     AuthModule,
+    GameplayModule,
+    PlayerModule,
   ],
   controllers: [],
   providers: [],

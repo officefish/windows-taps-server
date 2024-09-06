@@ -7,8 +7,8 @@ export class PlayerDto extends PickType(PlayerType, [
   'tgId',
   'isPremium',
   'balance',
-  'honeyLatest',
-  'honeyMax',
+  'energyLatest',
+  'energyMax',
   'firstName',
   'lastName',
   'incomePerHour',
@@ -42,11 +42,11 @@ export class PlayerDto extends PickType(PlayerType, [
 
   @IsNumber()
   @IsNotEmpty()
-  honeyLatest: number;
+  energyLatest: number;
 
   @IsNotEmpty()
   @IsNumber()
-  honeyMax: number;
+  energyMax: number;
 
   @IsNotEmpty()
   @IsNumber()

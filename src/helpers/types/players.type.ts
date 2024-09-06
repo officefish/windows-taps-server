@@ -31,11 +31,17 @@ export class PlayerMinType {
   @ApiProperty({ description: 'Player balance', example: 100.0 })
   balance: number;
 
-  @ApiProperty({ description: 'Latest honey amount collected by the player', example: 50.0 })
-  honeyLatest: number;
+  @ApiProperty({ description: 'Latest energy amount collected by the player', example: 50.0 })
+  energyLatest: number;
 
-  @ApiProperty({ description: 'Maximum honey amount collected by the player', example: 150.0 })
-  honeyMax: number;
+  @ApiProperty({ description: 'Maximum energy amount collected by the player', example: 150.0 })
+  energyMax: number;
+
+  @ApiProperty({ description: 'Energy recovery rate by the player', example: 50.0 })
+  recoveryRate : number;
+
+  @ApiProperty({ description: 'Maximum energy amount collected by the player', example: 150.0 })
+  lastEnergyUpdate: Date;
 
   @ApiProperty({ description: 'Date and time of the player\'s last login', example: '2023-09-01T12:34:56Z', nullable: true })
   lastLogin: Date;
