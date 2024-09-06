@@ -31,21 +31,24 @@ model Player {
   isPremium             Boolean                 @map("is_premium")
   username              String                  @map("user_name")
 
+  active                Boolean                 @default(true) @map("active")
+  incomePerHour         Float                   @default(0) @map("income_per_hour")
+
+  imageUrl              String?                 @map("image_url")
+
   firstName             String                  @map("first_name")
-  lastName            String                  @map("last_name")
+  lastName              String                  @map("last_name")
 
   balance               Float                   @default(0)  
-  honeyLatest           Float                   @default(0) @map("honey_latest")
-  honeyMax              Float                   @default(0) @map("honey_max")
+  honeyLatest           Float                   @default(300) @map("honey_latest")
+  honeyMax              Float                   @default(300) @map("honey_max")
 
   lastLogin             DateTime?               @map("last_login")
   lastLogout            DateTime?               @map("last_logout")
 
-
-  
-  levelId               String?                 @map("level_id")
+  levelId               Int                     @default(1) @map("level_id")
   referralProfit        Float?                  @default(0) @map("referral_profit")
-  rankId                String?                 @map("rank_id")
+  rankId                Int                     @default(1) @map("rank_id")
 
   token                 PlayerTokens?
 

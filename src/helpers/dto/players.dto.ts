@@ -10,7 +10,11 @@ export class PlayerDto extends PickType(PlayerType, [
   'honeyLatest',
   'honeyMax',
   'firstName',
-  'lastName'
+  'lastName',
+  'incomePerHour',
+  'active',
+  'imageUrl',
+
 ] as const) {
   @IsNotEmpty()
   @IsString()
@@ -43,4 +47,16 @@ export class PlayerDto extends PickType(PlayerType, [
   @IsNotEmpty()
   @IsNumber()
   honeyMax: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  incomePerHour: number;
+
+  @IsNotEmpty()
+  @IsBoolean()
+  active: boolean;
+
+  @IsNotEmpty()
+  @IsString()
+  imageUrl: string;
 }

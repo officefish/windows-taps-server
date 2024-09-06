@@ -43,17 +43,26 @@ export class PlayerMinType {
   @ApiProperty({ description: 'Date and time of the player\'s last logout', example: '2023-09-01T14:34:56Z', nullable: true })
   lastLogout: Date;
 
-  @ApiProperty({ description: 'Level ID of the player', example: 'level1', nullable: true })
-  levelId: string;
+  @ApiProperty({ description: 'Level ID of the player', example: 1, nullable: true })
+  levelId: number;
 
   @ApiProperty({ description: 'Profit earned from referrals', example: 10.0, nullable: true })
   referralProfit: number;
 
-  @ApiProperty({ description: 'Rank ID of the player', example: 'rank1', nullable: true })
-  rankId: string | null;
+  @ApiProperty({ description: 'Rank ID of the player', example: 1, nullable: true })
+  rankId: number | null;
 
   @ApiProperty({ description: 'ID of the player who invited this player', example: '507f1f77bcf86cd799439013', nullable: true })
   invitedById: string | null;
+
+  @ApiProperty({ description: 'Player income per hour', example: '42.20' })
+  incomePerHour: number;
+
+  @ApiProperty({ description: 'Player active status', example: true })
+  active: boolean;
+
+  @ApiProperty({ description: 'ImageUrl', example: 'https://example.com/image.png' })
+  imageUrl: string;
 }
 
 export class PlayerType extends PlayerMinType implements Player {
