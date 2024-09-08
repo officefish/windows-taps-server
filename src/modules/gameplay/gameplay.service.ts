@@ -49,6 +49,26 @@ export class GameplayService {
     return data;
   }
 
+  async updateBonusEnergy(tgId: string, bonus: number) {
+    const player = await this.prisma.player.findUnique({ where: { tgId } })
+    if (!player) {
+      throw new Error('User not found')
+    }
+
+    const energyLatest = player.energyLatest + bonus
+
+    console.log('energyLatest: ' + energyLatest)
+
+    await this.prisma.player.update({
+      where: { tgId },
+      data: {
+        energyLatest,
+      },
+    });
+
+    return this.updateEnergy(tgId)
+  }
+
   async updateBalance(
     tgId: string,
     inputData: {money: number, energy: number}
