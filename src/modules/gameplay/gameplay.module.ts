@@ -10,5 +10,6 @@ import { PrismaService } from '../prisma/prisma.service' // Сервис Prisma
     PrismaModule,
   ],
   providers: [GameplayService, PrismaService],
+  exports: [GameplayService],
 })
 export class GameplayModule {}

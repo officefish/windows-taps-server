@@ -1,10 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from "@/modules/prisma/prisma.service"; // Подключаем сервис Prisma
 import { Cron, CronExpression } from '@nestjs/schedule'; // Для планирования задач
 
 @Injectable()
 export class GameplayService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(GameplayService.name)  
+  constructor(
+    private prisma: PrismaService,
+  ) {}
 
   // Метод для расчета текущей энергии
   async updateEnergy(tgId: string) {
@@ -35,6 +38,8 @@ export class GameplayService {
       },
     });
 
+    this.logger.log(`Energy for user with tgId: ${player.tgId} updated`);
+
     return newEnergy;
   }
 
@@ -50,7 +55,7 @@ export class GameplayService {
 
     const { money, energy } = inputData
 
-    const newEnergy = Math.max(player.energyLatest - energy, player.energyMax);
+    const newEnergy = Math.max(player.energyLatest - energy, 0);
     const newBalance = player.balance + money
 
     const data = {
@@ -58,6 +63,8 @@ export class GameplayService {
       balance: newBalance,
       energyMax: player.energyMax
     }
+
+    this.logger.log(`Balance for user with tgId: ${player.tgId} updated`);
 
     // Сохраняем обновленное значение энергии и время последнего обновления
     await this.prisma.player.update({

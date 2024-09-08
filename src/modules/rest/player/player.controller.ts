@@ -2,14 +2,13 @@ import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/comm
 import { GameplayService } from '@/modules/gameplay/gameplay.service'
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PlayerEnergyResponse, PlayerFarmResponse } from './responses';
-import { Public } from '@/common/decorators';
+import { Player, Public } from '@/common/decorators';
 import { FarmDto } from './dto/farm.dto';
 import { FastifyRequest } from 'fastify'; // Импорт FastifyRequest
-import { AuthGuard } from './guards/player.guard';
+import { PlayerGuard } from './guards/player.guard'
 
 
 @ApiTags('player')
-@Public()
 @Controller('player')
 export class PlayerController {
   constructor(private readonly gameplay: GameplayService) {}
@@ -19,8 +18,9 @@ export class PlayerController {
     description: 'Player successfully energy update',
     type: PlayerEnergyResponse,
   })
-  @UseGuards(AuthGuard)
+  @UseGuards(PlayerGuard)
   @Get('energy')
+  @Player()
   async getPlayerEnergy(@Req() req: FastifyRequest) {
     const { tgId } = req.currentUser
     const energy = await this.gameplay.updateEnergy(tgId);
@@ -33,8 +33,9 @@ export class PlayerController {
     type: PlayerFarmResponse,
   })
 
-  @UseGuards(AuthGuard)
+  @UseGuards(PlayerGuard)
   @Post('farm')
+  @Player()
   async farm(
     @Body() body: FarmDto,
     @Req() req: FastifyRequest
@@ -43,3 +44,5 @@ export class PlayerController {
     return await this.gameplay.updateBalance(tgId, body);
   }
 }
+
+

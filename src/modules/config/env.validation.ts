@@ -61,6 +61,12 @@ class EnvironmentVariables {
   @IsString()
   JWT_SIGNATURE: string
 
+  @IsString()
+  JWT_ACCESS_EXPIRES_IN: string
+
+  @IsString()
+  JWT_REFRESH_EXPIRES_IN: string
+
   @IsNumber()
   JWT_SALT_LENGTH: number
 

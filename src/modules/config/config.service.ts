@@ -45,12 +45,12 @@ export class AppConfigService {
     return this.configService.get('DEFAULT_ART')
   }
 
-  getJwtAccessTime(): string {
-    return this.configService.get('JWT_ACCESS_TIME')
+  getJwtAccessExpiresIn(): string {
+    return this.configService.get('JWT_ACCESS_EXPIRES_IN')
   }
 
-  getJwtRefreshTime(): string {
-    return this.configService.get('JWT_REFRESH_TIME')
+  getJwtRefreshExpiresIn(): string {
+    return this.configService.get('JWT_REFRESH_EXPIRES_IN')
   }
 
   getJwtResetTime(): string {

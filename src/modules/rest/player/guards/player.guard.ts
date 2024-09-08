@@ -14,8 +14,8 @@ import { TokenService } from '@/modules/token/token.service'
 
 
 @Injectable()
-export class AuthGuard implements CanActivate {
-  private readonly logger = new Logger(AuthGuard.name);
+export class PlayerGuard implements CanActivate {
+  private readonly logger = new Logger(PlayerGuard.name);
 
   constructor(
     private tokenService: TokenService,
@@ -34,6 +34,7 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+
 
     try {
       if (isPublic) return true;
@@ -57,9 +58,11 @@ export class AuthGuard implements CanActivate {
         const user = await this.prismaService.player.findUnique({
           where: { id: userToken.id },
         });
-        
-        if (!user)
+
+        if (!user) {
+          this.logger.error('User not found. Maybe deleted ?');
           throw new NotFoundException('User not found. Maybe deleted ?');
+        }
 
         req.currentUser = userToken;
         return true;

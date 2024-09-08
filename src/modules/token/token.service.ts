@@ -25,16 +25,14 @@ import {
     generateTokens(payload: PlayersTokenDto) {
       const accessToken = this.jwt.sign(
         payload,
-        //this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
         {
-          expiresIn: this.config.getJwtAccessTime(),
+          expiresIn: this.config.getJwtAccessExpiresIn(),
         },
       );
       const refreshToken = this.jwt.sign(
         payload,
-        //this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
         {
-          expiresIn: this.config.getJwtRefreshTime(),
+          expiresIn: this.config.getJwtRefreshExpiresIn(),
         },
       );
   
@@ -68,15 +66,15 @@ import {
     }
   
     validateAccessToken(accessToken: string) {
+      
       try {
-        const token = this.jwt.verify(
+        const payload = this.jwt.verify(
           accessToken,
-          //this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
         );
   
-        this.logger.log(`Validated access token`);
-  
-        return token as PlayersTokenDto;
+        this.logger.log(`Validated access token for user with tgId: ${payload.tgId}`);
+        return payload as PlayersTokenDto;
+
       } catch (err: any) {
         this.logger.error(`Failed to validate access token: ${err.message}`);
         throw new UnauthorizedException();
