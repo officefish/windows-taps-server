@@ -44,7 +44,7 @@ model Player {
   energyLatest           Float                   @default(300) @map("energy_latest")
   energyMax              Float                   @default(300) @map("energy_max")
   // Скорость восстановления энергии в единицах/секундах
-  recoveryRate          Float                   @default(5) @map("recovery_rate")
+  recoveryRate          Float                   @default(0.5) @map("recovery_rate")
   // Время последнего обновления энергии
   lastEnergyUpdate      DateTime                @default(now()) @map("last_energy_update")
 

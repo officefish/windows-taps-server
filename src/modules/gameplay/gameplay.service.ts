@@ -26,8 +26,10 @@ export class GameplayService {
     // Восстановленная энергия
     const recoveredEnergy = player.recoveryRate * elapsedTime;
 
+    let newEnergy = Math.round(player.energyLatest + recoveredEnergy); 
+
     // Обновляем текущую энергию, но она не может превышать максимальное значение
-    const newEnergy = Math.min(player.energyLatest + recoveredEnergy, player.energyMax);
+    newEnergy = Math.min(newEnergy, player.energyMax);
 
     // Сохраняем обновленное значение энергии и время последнего обновления
     await this.prisma.player.update({
