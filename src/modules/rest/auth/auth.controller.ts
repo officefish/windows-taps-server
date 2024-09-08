@@ -54,7 +54,7 @@ export class AuthController {
     @Body() initial: TelegramInitDataDto,
   ): Promise<PlayerLoginResponse> {
 
-    console.log(`initData: ${initial.initData}`)
+    //console.log(`initData: ${initial.initData}`)
 
     const valid = this.telegramService.validateInitData(initial.initData);
     if (!valid) {
@@ -63,8 +63,6 @@ export class AuthController {
     }
 
     const userData = this.telegramService.extractUserData(initial.initData);
-
-    console.log(userData)
 
     const dto = {
       tgId: userData.id,

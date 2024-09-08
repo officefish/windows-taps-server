@@ -41,8 +41,8 @@ model Player {
 
   balance               Float                   @default(0)  
 
-  energyLatest           Float                   @default(300) @map("honey_latest")
-  energyMax              Float                   @default(300) @map("honey_max")
+  energyLatest           Float                   @default(300) @map("energy_latest")
+  energyMax              Float                   @default(300) @map("energy_max")
   // Скорость восстановления энергии в единицах/секундах
   recoveryRate          Float                   @default(5) @map("recovery_rate")
   // Время последнего обновления энергии
@@ -69,7 +69,7 @@ model Player {
 model PlayerTokens {
     id           String    @id @default(auto()) @map("_id") @db.ObjectId
     accessToken  String?
-    refreshToken String    
+    refreshToken String?    
     createdAt    DateTime? @default(now()) @map("created_at")
     updatedAt    DateTime? @updatedAt @map("updated_at")
     player       Player    @relation(fields: [playerId], references: [id])

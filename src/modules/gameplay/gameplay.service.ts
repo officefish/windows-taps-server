@@ -7,8 +7,8 @@ export class GameplayService {
   constructor(private prisma: PrismaService) {}
 
   // Метод для расчета текущей энергии
-  async updateEnergy(playerId: string) {
-    const player = await this.prisma.player.findUnique({ where: { tgId: playerId } })
+  async updateEnergy(tgId: string) {
+    const player = await this.prisma.player.findUnique({ where: { tgId } })
 
     if (!player) {
       throw new Error('User not found')
@@ -28,7 +28,7 @@ export class GameplayService {
 
     // Сохраняем обновленное значение энергии и время последнего обновления
     await this.prisma.player.update({
-      where: { tgId: playerId },
+      where: { tgId },
       data: {
         energyLatest: newEnergy,
         lastEnergyUpdate: now,
@@ -38,13 +38,43 @@ export class GameplayService {
     return newEnergy;
   }
 
+  async updateBalance(
+    tgId: string,
+    inputData: {money: number, energy: number}
+  ) {
+    const player = await this.prisma.player.findUnique({ where: { tgId } })
+
+    if (!player) {
+      throw new Error('User not found')
+    }
+
+    const { money, energy } = inputData
+
+    const newEnergy = Math.max(player.energyLatest - energy, player.energyMax);
+    const newBalance = player.balance + money
+
+    const data = {
+      energyLatest: newEnergy,
+      balance: newBalance,
+      energyMax: player.energyMax
+    }
+
+    // Сохраняем обновленное значение энергии и время последнего обновления
+    await this.prisma.player.update({
+      where: { tgId },
+      data,
+    });
+
+    return data;
+  }
+
   // Планирование периодического обновления энергии для всех пользователей
   @Cron(CronExpression.EVERY_MINUTE) // Обновляем энергию каждую минуту
   async updateEnergyForAllPlayers() {
     const players = await this.prisma.player.findMany()
 
     for (const player of players) {
-      await this.updateEnergy(player.id)
+      await this.updateEnergy(player.tgId)
     }
   }
 }

@@ -34,14 +34,14 @@ import {
       dto: PlayerLoginDto,
       referrerId: string,
     ): Promise<PlayerLoginResponse> {
-      this.logger.log('Попытка регистрации или входа пользователя...');
+      this.logger.log('Attempting to register or log in user...');
       const candidate = await this.prismaService.player.findFirst({
         where: { tgId: dto.tgId, username: dto.username },
       });
   
       if (candidate) {
         this.logger.log(
-          `Пользователь ${candidate.username} найден, выполняется вход...`,
+          `User ${candidate.username} found, enter in progress...`,
         );
         const tokens = this.tokenService.generateTokens({
           ...new PlayersTokenDto(candidate),
@@ -54,7 +54,7 @@ import {
         };
       }
   
-      this.logger.log('Пользователь не найден, выполняется регистрация...');
+      this.logger.log('User not found, registration in progress...');
 
       console.log(dto)
       

@@ -21,6 +21,8 @@
       "@/*": [
         "./src/*"
       ],
-    }
+    },
+    "typeRoots": ["./node_modules/@types", "./src/helpers/types"] // Убедитесь, что путь к папке правильный
+
   }
 }
