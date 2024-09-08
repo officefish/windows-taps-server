@@ -62,6 +62,9 @@ model Player {
  
   referrals      Player[] @relation("UserInvitations")
 
+   // One-to-One relation with DailyQuest
+  dailyQuest            DailyQuest?             
+
   referralCount  Int       @default(0) @ignore
 }
 
@@ -76,5 +79,17 @@ model PlayerTokens {
     playerId     String    @db.ObjectId @unique
 
     @@map("player_tokens")
+}
+
+model DailyQuest {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  playerId        String   @unique @map("player_id") @db.ObjectId
+  player          Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  
+  dailyQuestStreak Int     @default(0)    @map("daily_quest_streak") // Сколько дней подряд забирает награду
+  lastDailyClaim   DateTime?              @map("last_daily_claim")    // Дата последнего забора награды
+  dailyBaseReward  Float   @default(100)  @map("daily_base_reward")   // Базовая награда
+  dailyMaxBonus    Float   @default(200)  @map("daily_max_bonus")     // Максимальный бонус
+  dailyMaxStreak   Int     @default(14)   @map("daily_max_streak")    // Максимальный стрик для получения бонуса
 }
 

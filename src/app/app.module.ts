@@ -7,6 +7,7 @@ import { AuthModule } from '@/modules/rest/auth/auth.module'
 import { TelegramModule } from '@/modules/telegram/telegram.module'
 import { GameplayModule } from '@/modules/gameplay/gameplay.module'
 import { PlayerModule } from '@/modules/rest/player/player.module'
+import { QuestModule } from '@/modules/rest/quest/quest.module'
 
 
 @Module({
@@ -19,6 +20,7 @@ import { PlayerModule } from '@/modules/rest/player/player.module'
     AuthModule,
     GameplayModule,
     PlayerModule,
+    QuestModule,
   ],
   controllers: [],
   providers: [],

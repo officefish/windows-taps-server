@@ -57,8 +57,6 @@ export class GameplayService {
 
     const energyLatest = player.energyLatest + bonus
 
-    console.log('energyLatest: ' + energyLatest)
-
     await this.prisma.player.update({
       where: { tgId },
       data: {
@@ -82,7 +80,11 @@ export class GameplayService {
     const { money, energy } = inputData
 
     const newEnergy = Math.max(player.energyLatest - energy, 0);
-    const newBalance = player.balance + money
+
+    let newBalance = player.balance
+    if (money > 0 && newEnergy > 0) {
+      newBalance += money 
+    }
 
     const data = {
       energyLatest: newEnergy,
