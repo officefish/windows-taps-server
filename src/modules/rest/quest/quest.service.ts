@@ -110,7 +110,7 @@ export class QuestService {
 
     // Рассчитываем бонус на основе стрика
     const bonusFactor = dailyQuest.dailyQuestStreak / dailyQuest.dailyMaxStreak;
-    const bonus = bonusFactor * dailyQuest.dailyMaxBonus;
+    const bonus = Math.round(bonusFactor * dailyQuest.dailyMaxBonus);
     const totalReward = dailyQuest.dailyBaseReward + bonus;
 
     // Обновляем дату последнего забора награды
