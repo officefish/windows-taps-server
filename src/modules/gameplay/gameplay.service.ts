@@ -42,7 +42,11 @@ export class GameplayService {
 
     this.logger.log(`Energy for user with tgId: ${player.tgId} updated`);
 
-    return newEnergy;
+    const data = {
+      energyLatest: newEnergy,
+      energyMax: player.energyMax
+    }
+    return data;
   }
 
   async updateBalance(

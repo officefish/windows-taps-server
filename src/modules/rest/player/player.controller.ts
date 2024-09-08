@@ -23,8 +23,7 @@ export class PlayerController {
   @Player()
   async getPlayerEnergy(@Req() req: FastifyRequest) {
     const { tgId } = req.currentUser
-    const energy = await this.gameplay.updateEnergy(tgId);
-    return { energy };
+    return await this.gameplay.updateEnergy(tgId);
   }
 
   @ApiResponse({
