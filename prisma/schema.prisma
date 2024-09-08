@@ -91,5 +91,7 @@ model DailyQuest {
   dailyBaseReward  Float   @default(100)  @map("daily_base_reward")   // Базовая награда
   dailyMaxBonus    Float   @default(200)  @map("daily_max_bonus")     // Максимальный бонус
   dailyMaxStreak   Int     @default(14)   @map("daily_max_streak")    // Максимальный стрик для получения бонуса
+
+   @@map("daily_quest")
 }
 

@@ -32,6 +32,12 @@ export class QuestService {
     if (!dailyQuest) {
       // Получаем данные о игроке по tgId
       
+      // Create a new Date object for the current date
+      const today = new Date();
+
+      // Calculate the date 30 days ago
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(today.getDate() - 30);
 
       // Создаем новый квест
       dailyQuest = await this.prisma.dailyQuest.create({
@@ -45,7 +51,7 @@ export class QuestService {
           dailyBaseReward: 100,
           dailyMaxBonus: 200,
           dailyMaxStreak: 14,
-          lastDailyClaim: new Date(), // Последний раз не брал награду
+          lastDailyClaim: thirtyDaysAgo, // Последний раз не брал награду
         },
       });
     }
