@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from "@/modules/prisma/prisma.service"; // Подключаем сервис Prisma
 
 @Injectable()

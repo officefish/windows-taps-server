@@ -8,7 +8,7 @@ import { TelegramModule } from '@/modules/telegram/telegram.module'
 import { GameplayModule } from '@/modules/gameplay/gameplay.module'
 import { PlayerModule } from '@/modules/rest/player/player.module'
 import { QuestModule } from '@/modules/rest/quest/quest.module'
-
+import { ShopModule } from '@/modules/rest/shop/shop.module'
 
 @Module({
   imports: [
@@ -21,6 +21,7 @@ import { QuestModule } from '@/modules/rest/quest/quest.module'
     GameplayModule,
     PlayerModule,
     QuestModule,
+    ShopModule
   ],
   controllers: [],
   providers: [],

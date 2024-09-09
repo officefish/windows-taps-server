@@ -13,6 +13,7 @@ export function initializeSwagger(app: INestApplication) {
     .addTag('auth')
     .addTag('player')
     .addTag('quest')
+    .addTag('shop')
     .addTag('ping-pong')
     .build()
   patchNestJsSwagger()
