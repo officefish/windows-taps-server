@@ -113,15 +113,18 @@ model Item {
   income       Int        // Пассивный доход, который дает предмет раз в час
   categoryId   String     @db.ObjectId
   category     Category   @relation(fields: [categoryId], references: [id])
-  dependencies ItemDependency[]
+   dependencies ItemDependency[] @relation("DependentItems")
+  dependents   ItemDependency[] @relation("ItemDependents")
   rank         RankType       // Ранг, для которого доступен товар
   itemOnPlayers ItemOnPlayer[] 
 }
 
 model ItemDependency {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  item     Item     @relation(fields: [itemId], references: [id])
-  itemId   String   @db.ObjectId
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  itemId        String   @db.ObjectId
+  item          Item     @relation("DependentItems", fields: [itemId], references: [id])
+  dependsOnId   String   @db.ObjectId
+  dependsOn     Item     @relation("ItemDependents", fields: [dependsOnId], references: [id])
   @@map("item_dependency")
 }
 

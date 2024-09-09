@@ -24,6 +24,10 @@ export class ShopController {
   ) {
     // Получаем игрока и его предметы
     const { tgId } = req.currentUser
+
+    // Если предметы еще не созданы, то создаем их
+    await this.service.brootforceCreateItems()
+
     return await this.service.getItemsForPlayer(tgId)
   }
 
@@ -41,6 +45,10 @@ export class ShopController {
   ) {
     // Получаем игрока и его предметы
     const { tgId } = req.currentUser
+
+    // Если предметы еще не созданы, то создаем их
+    await this.service.brootforceCreateItems()
+
     return await this.service.getItemsForPlayer(tgId)
   }
 }
