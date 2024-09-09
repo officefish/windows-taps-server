@@ -1,9 +1,28 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { Player } from '@prisma/client'
+import { Player, RankType } from '@prisma/client'
 
 export enum AccountType {
   PREMIUM,
   COMMON
+}
+
+
+// export enum RankType {
+//   SHEETER, 
+//   INSTALLER,
+//   DEALER,
+//   MANUFACTURER
+// }
+
+export class ItemOnPlayerType {
+  @ApiProperty({ description: 'Unique identifier for the player item', example: '507f1f77bcf86cd799439011' })
+  id: string;
+
+  @ApiProperty({ description: 'Unique identifier for the player', example: '507f1f77bcf86cd799439011' })
+  playerId: string;
+
+  @ApiProperty({ description: 'Unique identifier for the item', example: '507f1f77bcf86cd799439011' })
+  itemId: string;
 }
 
 export class PlayerMinType {
@@ -55,9 +74,6 @@ export class PlayerMinType {
   @ApiProperty({ description: 'Profit earned from referrals', example: 10.0, nullable: true })
   referralProfit: number;
 
-  @ApiProperty({ description: 'Rank ID of the player', example: 1, nullable: true })
-  rankId: number | null;
-
   @ApiProperty({ description: 'ID of the player who invited this player', example: '507f1f77bcf86cd799439013', nullable: true })
   invitedById: string | null;
 
@@ -69,6 +85,9 @@ export class PlayerMinType {
 
   @ApiProperty({ description: 'ImageUrl', example: 'https://example.com/image.png' })
   imageUrl: string;
+
+  @ApiProperty({ description: 'Rank type of the player', example: RankType.SHEETER, nullable: true })
+  rank: RankType;
 }
 
 export class PlayerType extends PlayerMinType implements Player {
@@ -76,8 +95,13 @@ export class PlayerType extends PlayerMinType implements Player {
   @ApiProperty({ description: 'Array of players invited by this player', type: [PlayerType], nullable: true })
   referrals: PlayerType[];
 
+  @ApiProperty({ description: 'Array of players invited by this player', type: [ItemOnPlayerType], nullable: true })
+  items: ItemOnPlayerType[];
+
   @ApiProperty({ description: 'Count of referrals made by the player', example: 10 })
   referralCount: number;
+
+ 
   
   /* 
   @ApiProperty({

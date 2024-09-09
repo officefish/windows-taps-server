@@ -110,7 +110,7 @@ export class QuestService {
 
     // Рассчитываем бонус на основе стрика
     const bonusFactor = dailyQuest.dailyQuestStreak / dailyQuest.dailyMaxStreak;
-    const bonus = Math.round(bonusFactor * dailyQuest.dailyMaxBonus);
+    const bonus = Math.ceil(bonusFactor * dailyQuest.dailyMaxBonus);
     const totalReward = dailyQuest.dailyBaseReward + bonus;
 
     // Обновляем дату последнего забора награды
@@ -120,10 +120,10 @@ export class QuestService {
     await this.updateDailyQuest(dailyQuest);
 
     // Увеличиваем баланс игрока
-    const player = await this.prisma.player.findUnique({
+    let player = await this.prisma.player.findUnique({
       where: { tgId: tgId },
     });
-    await this.prisma.player.update({
+    player = await this.prisma.player.update({
       where: { tgId: tgId },
       data: { balance: player.balance + totalReward },
     });
@@ -163,7 +163,7 @@ export class QuestService {
     const nextStreak = Math.min(dailyQuest.dailyQuestStreak + 1, dailyQuest.dailyMaxStreak);
     const bonusFactor = nextStreak / dailyQuest.dailyMaxStreak;
     const nextBonus = bonusFactor * dailyQuest.dailyMaxBonus;
-    const nextReward = dailyQuest.dailyBaseReward + nextBonus;
+    const nextReward = Math.ceil(dailyQuest.dailyBaseReward + nextBonus);
   
     // Формируем ответ
     return {

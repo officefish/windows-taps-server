@@ -20,8 +20,15 @@ model User {
 }
 
 enum AccountType {
-    PREMIUM
-    COMMON
+  PREMIUM
+  COMMON
+}
+
+enum RankType {
+  SHEETER 
+  INSTALLER
+  DEALER
+  MANUFACTURER
 }
 
 model Player {
@@ -44,7 +51,7 @@ model Player {
   energyLatest           Float                   @default(300) @map("energy_latest")
   energyMax              Float                   @default(300) @map("energy_max")
   // Скорость восстановления энергии в единицах/секундах
-  recoveryRate          Float                   @default(0.5) @map("recovery_rate")
+  recoveryRate          Float                   @default(1) @map("recovery_rate")
   // Время последнего обновления энергии
   lastEnergyUpdate      DateTime                @default(now()) @map("last_energy_update")
 
@@ -53,19 +60,22 @@ model Player {
 
   levelId               Int                     @default(1) @map("level_id")
   referralProfit        Float?                  @default(0) @map("referral_profit")
-  rankId                Int                     @default(1) @map("rank_id")
 
   token                 PlayerTokens?
 
-  invitedById    String?  @db.ObjectId
-  invitedBy      Player?  @relation("UserInvitations", fields: [invitedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  invitedById           String?                 @db.ObjectId
+  invitedBy             Player?                 @relation("UserInvitations", fields: [invitedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
  
-  referrals      Player[] @relation("UserInvitations")
+  referrals             Player[]                @relation("UserInvitations")
 
    // One-to-One relation with DailyQuest
-  dailyQuest            DailyQuest?             
+  dailyQuest            DailyQuest?   
 
+  rank                  RankType                @default(SHEETER)
+  items                 ItemOnPlayer[]          
   referralCount  Int       @default(0) @ignore
+
+  @@map("player")
 }
 
 
@@ -94,4 +104,41 @@ model DailyQuest {
 
    @@map("daily_quest")
 }
+  
+
+model Item {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  price        Int
+  income       Int        // Пассивный доход, который дает предмет раз в час
+  categoryId   String     @db.ObjectId
+  category     Category   @relation(fields: [categoryId], references: [id])
+  dependencies ItemDependency[]
+  rank         RankType       // Ранг, для которого доступен товар
+  itemOnPlayers ItemOnPlayer[] 
+}
+
+model ItemDependency {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  item     Item     @relation(fields: [itemId], references: [id])
+  itemId   String   @db.ObjectId
+  @@map("item_dependency")
+}
+
+
+model ItemOnPlayer {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  playerId  String   @db.ObjectId
+  itemId    String   @db.ObjectId
+  player    Player   @relation(fields: [playerId], references: [id])
+  item      Item     @relation(fields: [itemId], references: [id])
+  @@map("item_on_player")
+}
+
+model Category {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  name  String
+  items Item[]
+}
+
 
