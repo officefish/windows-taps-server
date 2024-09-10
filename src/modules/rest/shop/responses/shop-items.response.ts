@@ -65,3 +65,11 @@ export class GetItemsForPlayerResponse {
   @ApiProperty({ type: [Category], description: 'Категории с предметами для игрока' })
   categories: Category[];
 }
+
+export class BuyItemResponse {
+  @ApiProperty({ type: [Category], description: 'Категории с предметами для игрока' })
+  categories: Category[];
+
+  @ApiProperty({description: 'Баланс игрока' })
+  balance: number;
+}

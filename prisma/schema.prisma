@@ -111,6 +111,7 @@ model Item {
   name         String
   description  String   @default("")
   imageUrl     String   @default("")
+  level        Int      @default(0)
   price        Int
   income       Int        // Пассивный доход, который дает предмет раз в час
   categoryId   String     @db.ObjectId
@@ -128,6 +129,7 @@ model ItemDependency {
   item          Item     @relation("DependentItems", fields: [itemId], references: [id])
   dependsOnId   String   @db.ObjectId
   dependsOn     Item     @relation("ItemDependents", fields: [dependsOnId], references: [id])
+  name          String   @default("") 
   @@map("item_dependency")
 }
 

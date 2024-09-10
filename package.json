@@ -19,7 +19,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "ngrok": "ngrok http http://localhost:8001"
+    "ngrok": "ngrok http http://localhost:8001 --response-header-add \"Access-Control-Allow-Origin: *\""
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",

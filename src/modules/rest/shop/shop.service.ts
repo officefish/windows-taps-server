@@ -90,6 +90,7 @@ export class ShopService {
               itemId: currentItem.id,
               dependsOnId: dependencyItem.id,
               level: dependencyLevel,
+              name: dependencyName,
             },
           });
         }
@@ -135,6 +136,7 @@ export class ShopService {
     // Для каждого предмета в категории проверяем его статус
     for (const item of category.items) {
       if (playerItemIds.includes(item.id)) {
+        item.level = player.items.find((i) => i.itemId === item.id).level;
         // Если предмет уже куплен, добавляем в массив купленных
         purchasedItems.push(item);
       } else {
@@ -163,6 +165,180 @@ export class ShopService {
   });
 
   return result;
+  }
+
+  async buyItem(tgId: string, itemId: string) {
+    // Найти игрока по tgId
+    const player = await this.prisma.player.findUnique({
+      where: { tgId: tgId },
+      include: { items: true }, // Включаем список купленных предметов
+    });
+
+    if (!player) {
+      throw new HttpException('Player not found', HttpStatus.NOT_FOUND);
+    }
+
+    
+
+    // Найти предмет по itemId
+    const item = await this.prisma.item.findUnique({
+      where: { id: itemId },
+      include: { dependencies: true }, // Включаем зависимости предмета
+    });
+
+    if (!item) {
+      throw new HttpException('Item not found', HttpStatus.NOT_FOUND);
+    }
+
+    // Проверить, соответствует ли ранг игрока рангу предмета
+    if (item.rank !== player.rank) {
+      throw new HttpException('This item is not available for your rank', HttpStatus.FORBIDDEN);
+    }
+
+    // Проверить, не был ли предмет уже куплен
+    const alreadyOwned = player.items.some(playerItem => playerItem.itemId === itemId);
+    if (alreadyOwned) {
+      throw new HttpException('You have already purchased this item', HttpStatus.CONFLICT);
+    }
+
+    // Проверить, выполнены ли все зависимости предмета
+    const playerItemIds = player.items.map(playerItem => playerItem.itemId);
+    const dependenciesMet = item.dependencies.every(dep => playerItemIds.includes(dep.dependsOnId));
+
+    if (!dependenciesMet) {
+      throw new HttpException('You have not met all the dependencies for this item', HttpStatus.FORBIDDEN);
+    }
+
+    // Проверить, достаточно ли у игрока средств для покупки предмета
+    if (player.balance < item.price) {
+      throw new HttpException('Not enough balance to purchase this item', HttpStatus.BAD_REQUEST);
+    }
+
+    // Вычитаем стоимость предмета из баланса игрока
+    const playerUpdate = await this.prisma.player.update({
+      where: { tgId: tgId },
+      data: { balance: player.balance - item.price },
+    });
+
+    // Добавляем предмет в инвентарь игрока
+    await this.prisma.itemOnPlayer.create({
+      data: {
+        playerId: player.id,
+        itemId: item.id,
+      },
+    });
+
+    const categories = await this.getItemsForPlayer(tgId);
+    const balance = playerUpdate.balance
+
+    const income = await this.recalculateIncomePerHour(tgId);
+    this.logger.log(`Recalculated income for player ${tgId}: ${income}`);
+
+    return { categories, balance };
+  }
+
+  // Функция для пересчета пассивного дохода игрока
+  async recalculateIncomePerHour(tgId: string) {
+    // Найти игрока и его предметы
+    const player = await this.prisma.player.findUnique({
+      where: { tgId },
+      include: {
+        items: {
+          include: { item: true }, // Включаем информацию о предметах
+        },
+      },
+    });
+
+    if (!player) {
+      throw new Error('Player not found');
+    }
+
+    // Рассчитываем пассивный доход
+    let totalIncomePerHour = 0;
+
+    for (const playerItem of player.items) {
+      const item = playerItem.item;
+      const level = playerItem.level;
+
+      // Доход предмета = (income / 10) * текущий уровень
+      const itemIncome = (item.income / 10) * level;
+
+      // Добавляем доход предмета к общему доходу
+      totalIncomePerHour += itemIncome;
+    }
+
+    // Обновляем поле incomePerHour у игрока
+    await this.prisma.player.update({
+      where: { tgId },
+      data: {
+        incomePerHour: totalIncomePerHour,
+      },
+    });
+
+    return totalIncomePerHour; // Возвращаем итоговый доход
+  }
+
+  // Функция для улучшения предмета
+  async upgradeItem(tgId: string, itemId: string) {
+    // Найти игрока и его предметы
+    const player = await this.prisma.player.findUnique({
+      where: { tgId },
+      include: {
+        items: {
+          include: { item: true }, // Включаем информацию о предмете
+        },
+      },
+    });
+
+    if (!player) {
+      throw new HttpException('Player not found', HttpStatus.NOT_FOUND);
+    }
+
+    // Найти предмет у игрока
+    const playerItem = player.items.find(pi => pi.itemId === itemId);
+
+    if (!playerItem) {
+      throw new HttpException('Item not found in your inventory', HttpStatus.NOT_FOUND);
+    }
+
+    // Проверить максимальный уровень предмета
+    if (playerItem.level >= 10) {
+      throw new HttpException('Item is already at max level', HttpStatus.BAD_REQUEST);
+    }
+
+    // Рассчитать стоимость улучшения (10% от цены предмета)
+    const upgradeCost = playerItem.item.price * 0.1;
+
+    // Проверить, есть ли у игрока достаточно средств
+    if (player.balance < upgradeCost) {
+      throw new HttpException('Not enough balance to upgrade the item', HttpStatus.BAD_REQUEST);
+    }
+
+    // Увеличить уровень предмета
+    const newLevel = playerItem.level + 1;
+
+    // Обновить данные в базе: уровень предмета и баланс игрока
+    await this.prisma.itemOnPlayer.update({
+      where: { id: playerItem.id },
+      data: {
+        level: newLevel,
+      },
+    });
+
+    const playerUpdate =await this.prisma.player.update({
+      where: { tgId },
+      data: {
+        balance: player.balance - upgradeCost,
+      },
+    });
+
+    const categories = await this.getItemsForPlayer(tgId);
+    const balance = playerUpdate.balance
+
+    const income = await this.recalculateIncomePerHour(tgId);
+    this.logger.log(`Recalculated income for player ${tgId}: ${income}`);
+
+    return { categories, balance };
   }
 
 }
