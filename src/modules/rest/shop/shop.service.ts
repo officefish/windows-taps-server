@@ -25,20 +25,19 @@ export class ShopService {
      // Создание категорий и товаров
       const categories = {
         MIND: [
-          { name: 'School', income: 50, cost: 300, dependencies: [] },
-          { name: 'Institute', income: 300, cost: 3500, dependencies: ['School'] },
-          { name: 'Friends', income: 120, cost: 800, dependencies: [] },
+          { name: 'School', income: 50, cost: 300, imageUrl:'shop/school.jpg', dependencies: [] },
+          { name: 'Institute', income: 300, cost: 3500, imageUrl:'shop/university.jpg', dependencies: [{name:'School', level: 1}] },
+          { name: 'Friends', income: 120, cost: 800, imageUrl:'shop/friends.jpg', dependencies: [] },
         ],
         PHYSICAL_EDUCATION: [
-          { name: 'Exercises', income: 150, cost: 750, dependencies: [] },
-          { name: 'Gym', income: 200, cost: 1000, dependencies: ['Exercises'] },
+          { name: 'Exercises', income: 150, cost: 750, imageUrl:'shop/fitness.jpg', dependencies: [] },
+          { name: 'Gym', income: 200, cost: 1000, imageUrl:'shop/fitness-room.jpg', dependencies: [{name:'Exercises', level: 1}] },
         ],
         CLOTHES: [
-          { name: 'Cap', income: 50, cost: 300, dependencies: [] },
-          { name: 'Raincoat', income: 50, cost: 300, dependencies: [] },
-          { name: 'Umbrella', income: 50, cost: 300, dependencies: ['Raincoat'] },
-          { name: 'Boots', income: 50, cost: 300, dependencies: [] },
-          { name: 'Jacket', income: 100, cost: 500, dependencies: [] },
+          { name: 'Cap', income: 50, cost: 300, imageUrl:"shop/cap.jpg", dependencies: [] },
+          { name: 'Raincoat', income: 50, cost: 300, imageUrl:"shop/windbreaker.jpg", dependencies: [] },
+          { name: 'Boots', income: 50, cost: 300, imageUrl:"shop/shoes.jpg", dependencies: [] },
+          { name: 'Jacket', income: 100, cost: 500, imageUrl:"shop/shoes.jpg", dependencies: [] },
         ],
       };
 
@@ -63,8 +62,10 @@ export class ShopService {
       const createdItem = await this.prisma.item.create({
         data: {
           name: item.name,
+          description: item.description,
           income: item.income,
           price: item.cost,
+          imageUrl: item.imageUrl,
           rank: RankType.SHEETER,
           category: { connect: { id: category.id } },
         },
@@ -77,7 +78,9 @@ export class ShopService {
     // Устанавливаем зависимости для товаров
     for (const item of items) {
       if (item.dependencies.length > 0) {
-        for (const dependencyName of item.dependencies) {
+        for (const dependency of item.dependencies) {
+          const dependencyName = dependency.name;
+          const dependencyLevel = dependency.level;
           const dependencyItem = createdItems[dependencyName];
           const currentItem = createdItems[item.name];
 
@@ -86,6 +89,7 @@ export class ShopService {
             data: {
               itemId: currentItem.id,
               dependsOnId: dependencyItem.id,
+              level: dependencyLevel,
             },
           });
         }
@@ -117,8 +121,6 @@ export class ShopService {
       },
     },
   });
-
-  console.log(categories)
 
   // Список ID предметов, которые игрок уже купил
   const playerItemIds = player.items.map((itemOnPlayer) => itemOnPlayer.itemId);

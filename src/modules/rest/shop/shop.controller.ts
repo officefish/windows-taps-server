@@ -3,8 +3,10 @@ import { PlayerGuard } from '../player/guards/player.guard';
 import { Player } from '@/common/decorators';
 import { FastifyRequest, FastifyReply } from 'fastify'; // Импорт FastifyRequest
 import { ShopService } from './shop.service';
-import { ApiResponse } from '@nestjs/swagger';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { GetItemsForPlayerResponse } from './responses/shop-items.response';
 
+@ApiTags('shop')
 @Controller('shop')
 export class ShopController {
   
@@ -13,7 +15,7 @@ export class ShopController {
   @ApiResponse({
     status: 200,
     description: 'Player items successfully responsed',
-    //type: DailyRewardResponse,
+    type: GetItemsForPlayerResponse,
   })
 
   @UseGuards(PlayerGuard)

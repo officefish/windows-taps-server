@@ -109,11 +109,13 @@ model DailyQuest {
 model Item {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
   name         String
+  description  String   @default("")
+  imageUrl     String   @default("")
   price        Int
   income       Int        // Пассивный доход, который дает предмет раз в час
   categoryId   String     @db.ObjectId
   category     Category   @relation(fields: [categoryId], references: [id])
-   dependencies ItemDependency[] @relation("DependentItems")
+  dependencies ItemDependency[] @relation("DependentItems")
   dependents   ItemDependency[] @relation("ItemDependents")
   rank         RankType       // Ранг, для которого доступен товар
   itemOnPlayers ItemOnPlayer[] 
@@ -122,6 +124,7 @@ model Item {
 model ItemDependency {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   itemId        String   @db.ObjectId
+  level         Int      @default(1) 
   item          Item     @relation("DependentItems", fields: [itemId], references: [id])
   dependsOnId   String   @db.ObjectId
   dependsOn     Item     @relation("ItemDependents", fields: [dependsOnId], references: [id])
@@ -135,6 +138,7 @@ model ItemOnPlayer {
   itemId    String   @db.ObjectId
   player    Player   @relation(fields: [playerId], references: [id])
   item      Item     @relation(fields: [itemId], references: [id])
+  level     Int      @default(1) 
   @@map("item_on_player")
 }
 
