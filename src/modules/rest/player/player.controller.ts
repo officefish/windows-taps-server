@@ -6,6 +6,7 @@ import { Player } from '@/common/decorators';
 import { FarmDto } from './dto/farm.dto';
 import { FastifyRequest, FastifyReply } from 'fastify'; // Импорт FastifyRequest
 import { PlayerGuard } from './guards/player.guard'
+import { PlayerIncomeResponse } from './responses/income.response';
 
 
 @ApiTags('player')
@@ -76,6 +77,24 @@ export class PlayerController {
   ) {
     const { tgId } = req.currentUser
     return await this.gameplay.updateBalance(tgId, body);
+  }
+
+  @ApiResponse({
+    status: 200,
+    description: 'Player successfully energy update',
+    type: PlayerIncomeResponse,
+  })
+  @UseGuards(PlayerGuard)
+  @Post('income')
+  @Player()
+  async updatePlayerIncome(
+    @Body() body: {energy: number},
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply
+  ) {
+    const { tgId } = req.currentUser
+    const data = await this.gameplay.updateBalanceWithIncome(tgId);
+    return reply.type('application/json').send(data);
   }
 }
 

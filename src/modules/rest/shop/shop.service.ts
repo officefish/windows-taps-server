@@ -231,10 +231,10 @@ export class ShopService {
     const categories = await this.getItemsForPlayer(tgId);
     const balance = playerUpdate.balance
 
-    const income = await this.recalculateIncomePerHour(tgId);
-    this.logger.log(`Recalculated income for player ${tgId}: ${income}`);
+    const incomePerHour = await this.recalculateIncomePerHour(tgId);
+    this.logger.log(`Recalculated income for player ${tgId}: ${incomePerHour}`);
 
-    return { categories, balance };
+    return { categories, balance, incomePerHour };
   }
 
   // Функция для пересчета пассивного дохода игрока
@@ -335,10 +335,10 @@ export class ShopService {
     const categories = await this.getItemsForPlayer(tgId);
     const balance = playerUpdate.balance
 
-    const income = await this.recalculateIncomePerHour(tgId);
-    this.logger.log(`Recalculated income for player ${tgId}: ${income}`);
+    const incomePerHour = await this.recalculateIncomePerHour(tgId);
+    this.logger.log(`Recalculated income for player ${tgId}: ${incomePerHour}`);
 
-    return { categories, balance };
+    return { categories, balance, incomePerHour };
   }
 
 }

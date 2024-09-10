@@ -40,6 +40,7 @@ model Player {
 
   active                Boolean                 @default(true) @map("active")
   incomePerHour         Float                   @default(0) @map("income_per_hour")
+  lastIncomeUpdate      DateTime                @default(now()) @map("last_income_update")
 
   imageUrl              String?                 @map("image_url")
 

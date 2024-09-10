@@ -51,7 +51,7 @@ export class PlayerMinType {
   @ApiProperty({ description: 'Energy recovery rate by the player', example: 50.0 })
   recoveryRate : number;
 
-  @ApiProperty({ description: 'Maximum energy amount collected by the player', example: 150.0 })
+  @ApiProperty({ description: 'Date and time of the player\'s last energy update', example: new Date() })
   lastEnergyUpdate: Date;
 
   @ApiProperty({ description: 'Date and time of the player\'s last login', example: '2023-09-01T12:34:56Z', nullable: true })
@@ -71,6 +71,9 @@ export class PlayerMinType {
 
   @ApiProperty({ description: 'Player income per hour', example: '42.20' })
   incomePerHour: number;
+
+  @ApiProperty({ description: 'Date and time of the last income update', example: new Date() })
+  lastIncomeUpdate: Date;
 
   @ApiProperty({ description: 'Player active status', example: true })
   active: boolean;

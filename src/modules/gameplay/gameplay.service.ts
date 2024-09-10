@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from "@/modules/prisma/prisma.service"; // Подключаем сервис Prisma
 import { Cron, CronExpression } from '@nestjs/schedule'; // Для планирования задач
+import { differenceInHours } from 'date-fns';
 
 @Injectable()
 export class GameplayService {
@@ -101,6 +102,70 @@ export class GameplayService {
     });
 
     return data;
+  }
+
+  async updateBalanceWithIncome(tgId: string) {
+    // Найти игрока
+    const player = await this.prisma.player.findUnique({
+      where: { tgId },
+    });
+
+    if (!player) {
+      throw new HttpException('Player not found', HttpStatus.NOT_FOUND);
+    }
+
+    const { incomePerHour, lastIncomeUpdate, balance } = player;
+
+    // Если доход меньше единицы за час, не обновляем баланс и выходим
+    if (incomePerHour < 1) {
+      throw new HttpException(
+        'Income per hour is too low to update balance',
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    // Считаем, сколько времени прошло с последнего обновления дохода
+    const currentTime = new Date();
+    const hoursPassed = differenceInHours(currentTime, lastIncomeUpdate);
+
+    // Если прошло менее одного часа, не обновляем баланс
+    if (hoursPassed < 1) {
+      throw new HttpException(
+        'Not enough time has passed since the last income update',
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    // Максимум доход начисляется за 3 часа
+    const applicableHours = Math.min(hoursPassed, 3);
+
+    // Рассчитываем доход за это время
+    const incomeToAdd = incomePerHour * applicableHours;
+
+    // Если итоговый доход меньше 1, не обновляем баланс и время
+    if (incomeToAdd < 1) {
+      return {
+        newBalance: player.balance,
+        incomeAdded: 0,
+      };
+    }
+
+    // Обновляем баланс игрока
+    const updatedBalance = balance + incomeToAdd;
+
+    // Обновляем время последнего расчета дохода и баланс в базе данных
+    await this.prisma.player.update({
+      where: { tgId },
+      data: {
+        balance: updatedBalance,
+        lastIncomeUpdate: currentTime,
+      },
+    });
+
+    return {
+      newBalance: updatedBalance,
+      incomeAdded: incomeToAdd,
+    };
   }
 
   // Планирование периодического обновления энергии для всех пользователей

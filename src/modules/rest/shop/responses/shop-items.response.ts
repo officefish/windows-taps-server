@@ -72,4 +72,7 @@ export class BuyItemResponse {
 
   @ApiProperty({description: 'Баланс игрока' })
   balance: number;
+
+  @ApiProperty({description: 'Доход за час' })
+  incomePerHour: number;
 }
