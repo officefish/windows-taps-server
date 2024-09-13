@@ -12,6 +12,7 @@ export function initializeSwagger(app: INestApplication) {
     .addBearerAuth()
     .addTag('auth')
     .addTag('player')
+    .addTag('gameplay')
     .addTag('quest')
     .addTag('shop')
     .addTag('ping-pong')

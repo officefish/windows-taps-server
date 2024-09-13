@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Options, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, NotFoundException, Options, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { GameplayService } from '@/modules/gameplay/gameplay.service'
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PlayerEnergyResponse, PlayerFarmResponse } from './responses';
@@ -7,12 +7,18 @@ import { FarmDto } from './dto/farm.dto';
 import { FastifyRequest, FastifyReply } from 'fastify'; // Импорт FastifyRequest
 import { PlayerGuard } from './guards/player.guard'
 import { PlayerIncomeResponse } from './responses/income.response';
+import { PrismaService } from '@/modules/prisma/prisma.service';
+import { GameplayTickDto } from '@/modules/gameplay/dto/gameplay-tick.dto';
+import { GameplayTickResponse } from '@/modules/gameplay/responses/gameplay-tick.response';
 
 
 @ApiTags('player')
 @Controller('player')
 export class PlayerController {
-  constructor(private readonly gameplay: GameplayService) {}
+  constructor(
+    private readonly gameplay: GameplayService,
+    private readonly prisma: PrismaService
+  ) {}
 
   @ApiResponse({
     status: 200,
@@ -27,10 +33,14 @@ export class PlayerController {
     @Res() reply: FastifyReply
   ) {
     const { tgId } = req.currentUser
-    console.log('tgId:' + tgId)
-    const data = await this.gameplay.updateEnergy(tgId);
-    console.log('data: ')
-    console.log(data)
+
+    /* Player */
+    const player = await this.prisma.player.findUnique({ where: { tgId } })
+    if (!player) {
+      throw new NotFoundException('User not found');
+    }
+
+    const data = await this.gameplay.updateEnergy(player);
     return reply.type('application/json').send(data);
   }
 
@@ -48,7 +58,14 @@ export class PlayerController {
     @Res() reply: FastifyReply
   ) {
     const { tgId } = req.currentUser
-    const data = await this.gameplay.updateBonusEnergy(tgId, body.energy);
+    
+    /* Player */
+    const player = await this.prisma.player.findUnique({ where: { tgId } })
+    if (!player) {
+      throw new NotFoundException('User not found');
+    }
+ 
+    const data = await this.gameplay.updateBonusEnergy(player, body.energy);
     return reply.type('application/json').send(data);
   }
 
@@ -76,7 +93,13 @@ export class PlayerController {
     @Req() req: FastifyRequest
   ) {
     const { tgId } = req.currentUser
-    return await this.gameplay.updateBalance(tgId, body);
+    /* Player */
+    const player = await this.prisma.player.findUnique({ where: { tgId } })
+    if (!player) {
+      throw new NotFoundException('User not found');
+    }
+
+    return await this.gameplay.updateBalance(player, body);
   }
 
   @ApiResponse({
@@ -93,9 +116,42 @@ export class PlayerController {
     @Res() reply: FastifyReply
   ) {
     const { tgId } = req.currentUser
-    const data = await this.gameplay.updateBalanceWithIncome(tgId);
+
+    /* Player */
+    const player = await this.prisma.player.findUnique({ where: { tgId } })
+    if (!player) {
+      throw new NotFoundException('User not found');
+    }
+
+    const data = await this.gameplay.updateBalanceWithIncome(player);
     return reply.type('application/json').send(data);
   }
+
+  
+  @ApiResponse({
+    status: 200,
+    description: 'Gameplay regular tick updated',
+    type: GameplayTickResponse,
+  })
+  @UseGuards(PlayerGuard)
+  @Post('tick')
+  @Player()
+  async tick(
+    @Body() body: GameplayTickDto,
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply
+  ) {
+    const { tgId } = req.currentUser
+
+    /* Player */
+    const player = await this.prisma.player.findUnique({ where: { tgId } })
+    if (!player) {
+      throw new NotFoundException('User not found');
+    }
+    return await this.gameplay.tick(player, body);
+    //return reply.type('application/json').send(data);
+  }
+
 }
 
 

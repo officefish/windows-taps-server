@@ -2,6 +2,8 @@ import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from "@/modules/prisma/prisma.service"; // Подключаем сервис Prisma
 import { Cron, CronExpression } from '@nestjs/schedule'; // Для планирования задач
 import { differenceInMilliseconds } from 'date-fns';
+import { Player } from '@prisma/client'; // Импорт модели Player из Prisma Client
+
 
 @Injectable()
 export class GameplayService {
@@ -11,13 +13,8 @@ export class GameplayService {
   ) {}
 
   // Метод для расчета текущей энергии
-  async updateEnergy(tgId: string) {
-    const player = await this.prisma.player.findUnique({ where: { tgId } })
-
-    if (!player) {
-      throw new Error('User not found')
-    }
-
+  async updateEnergy(player: Player) {
+    
     // Текущее время
     const now = new Date();
 
@@ -34,7 +31,7 @@ export class GameplayService {
 
     // Сохраняем обновленное значение энергии и время последнего обновления
     await this.prisma.player.update({
-      where: { tgId },
+      where: { tgId: player.tgId },
       data: {
         energyLatest: newEnergy,
         lastEnergyUpdate: now,
@@ -50,34 +47,25 @@ export class GameplayService {
     return data;
   }
 
-  async updateBonusEnergy(tgId: string, bonus: number) {
-    const player = await this.prisma.player.findUnique({ where: { tgId } })
-    if (!player) {
-      throw new Error('User not found')
-    }
-
+  async updateBonusEnergy(player: Player, bonus: number) {
+  
     const energyLatest = player.energyLatest + bonus
 
     await this.prisma.player.update({
-      where: { tgId },
+      where: { tgId: player.tgId },
       data: {
         energyLatest,
       },
     });
 
-    return this.updateEnergy(tgId)
+    return this.updateEnergy(player)
   }
 
   async updateBalance(
-    tgId: string,
+    player: Player,
     inputData: {money: number, energy: number}
   ) {
-    const player = await this.prisma.player.findUnique({ where: { tgId } })
-
-    if (!player) {
-      throw new Error('User not found')
-    }
-
+    
     const { money, energy } = inputData
 
     const newEnergy = Math.max(player.energyLatest - energy, 0);
@@ -97,23 +85,15 @@ export class GameplayService {
 
     // Сохраняем обновленное значение энергии и время последнего обновления
     await this.prisma.player.update({
-      where: { tgId },
+      where: { tgId: player.tgId },
       data,
     });
 
     return data;
   }
 
-  async updateBalanceWithIncome(tgId: string) {
-    // Найти игрока
-    const player = await this.prisma.player.findUnique({
-      where: { tgId },
-    });
-
-    if (!player) {
-      throw new HttpException('Player not found', HttpStatus.NOT_FOUND);
-    }
-
+  async updateBalanceWithIncome(player: Player) {
+    
     const { incomePerHour, lastIncomeUpdate, balance } = player;
 
     // Если доход меньше единицы за час, не обновляем баланс и выходим
@@ -150,7 +130,7 @@ export class GameplayService {
 
     // Обновляем время последнего расчета дохода и баланс в базе данных
     await this.prisma.player.update({
-      where: { tgId },
+      where: { tgId: player.tgId },
       data: {
         balance: updatedBalance,
         lastIncomeUpdate: currentTime,
@@ -163,13 +143,48 @@ export class GameplayService {
     };
   }
 
-  // Планирование периодического обновления энергии для всех пользователей
-  @Cron(CronExpression.EVERY_MINUTE) // Обновляем энергию каждую минуту
-  async updateEnergyForAllPlayers() {
-    const players = await this.prisma.player.findMany()
-
-    for (const player of players) {
-      await this.updateEnergy(player.tgId)
+  async tick(
+    player: Player,
+    inputData: { money: number, energy: number }
+  ) {
+    if (inputData.money === 0) {
+      // Если money = 0, выполняем только updateBalanceWithIncome
+      const { incomeAdded } = await this.updateBalanceWithIncome(player);
+  
+      return {
+        incomeAdded,
+        balance: player.balance,  // В случае с 0, баланс остается прежним
+        energyLatest: player.energyLatest,  // Значения энергии не изменяются
+        energyMax: player.energyMax,
+      };
     }
+  
+    // Если money != 0, выполняем все три запроса параллельно
+    const [incomeUpdate, balanceUpdate, energyUpdate] = await Promise.all([
+      this.updateBalanceWithIncome(player),
+      this.updateBalance(player, inputData),
+      this.updateEnergy(player),
+    ]);
+  
+    const { incomeAdded } = incomeUpdate;
+    const { balance } = balanceUpdate;
+    const { energyLatest, energyMax } = energyUpdate;
+  
+    return {
+      incomeAdded,
+      balance,
+      energyLatest,
+      energyMax
+    };
   }
+
+  // Планирование периодического обновления энергии для всех пользователей
+  // @Cron(CronExpression.EVERY_MINUTE) // Обновляем энергию каждую минуту
+  // async updateEnergyForAllPlayers() {
+  //   const players = await this.prisma.player.findMany()
+
+  //   for (const player of players) {
+  //     await this.updateEnergy(player)
+  //   }
+  // }
 }
