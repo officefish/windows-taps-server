@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Player, RankType } from '@prisma/client'
+import { UUID } from 'crypto';
 
 export enum AccountType {
   PREMIUM,
@@ -83,12 +84,18 @@ export class PlayerMinType {
 
   @ApiProperty({ description: 'Rank type of the player', example: RankType.SHEETER, nullable: true })
   rank: RankType;
+
+  @ApiProperty({ description: 'Player refferal code for personal invitations', example: '507f1f77bcf86cd799439011', nullable: true })
+  referralCode: string;
+
 }
 
 export class PlayerType extends PlayerMinType implements Player {
 
   @ApiProperty({ description: 'Array of players invited by this player', type: [PlayerType], nullable: true })
-  referrals: PlayerType[];
+  invitations: PlayerType[];
+
+  
 
   @ApiProperty({ description: 'Array of players invited by this player', type: [ItemOnPlayerType], nullable: true })
   items: ItemOnPlayerType[];

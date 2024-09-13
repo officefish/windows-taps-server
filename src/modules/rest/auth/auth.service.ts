@@ -18,6 +18,9 @@ import {
   import { PlayerLoginResponse } from './responses'
 
   import { ReferralsService } from '@/modules/rest/referrals/referrals.service'
+
+  import { v4 as uuidv4 } from 'uuid'; // Для генерации уникального кода
+
   //import { CreateReferralEarlyBonusDto } from '@/modules/rest/referrals/dto/'
     
   @Injectable()
@@ -32,7 +35,7 @@ import {
   
     async registerOrLogin(
       dto: PlayerLoginDto,
-      referrerId: string,
+      referralCode: string,
     ): Promise<PlayerLoginResponse> {
       this.logger.log('Attempting to register or log in user...');
       const candidate = await this.prismaService.player.findFirst({
@@ -56,11 +59,26 @@ import {
   
       this.logger.log('User not found, registration in progress...');
 
-      console.log(dto)
+      const generatedCode = uuidv4();  // Можно использовать другие методы генерации
+
+      let invitedById = null;
+
+      // Если есть реферальный код, находим кто пригласил
+      if (referralCode) {
+        const referrer = await this.prismaService.player.findUnique({
+          where: { referralCode },
+        });
+
+        if (referrer) {
+          invitedById = referrer.id;
+        }
+      }
       
       const player = await this.prismaService.player.create({
         data: {
           ...dto,
+          invitedById,
+          referralCode: generatedCode,
           lastLogin: new Date(),
           referralProfit: 0,
           createdAt: new Date(),
@@ -71,51 +89,6 @@ import {
         ...new PlayersTokenDto(player),
       });
       await this.tokenService.saveTokens(player.id, tokens.refreshToken);
-  
-      if (referrerId) {
-        const referrer = await this.prismaService.player.findUnique({
-          where: { id: referrerId },
-        });
-        const referralCount = await this.prismaService.player.count({
-          where: { invitedById: referrerId },
-        });
-  
-        // await this.prismaService.referral.create({
-        //   data: { referralId: player.id, referrerId: referrer.id },
-        // });
-  
-        if (!referrer) {
-          return {
-            message: 'Player registered successfully!',
-            player,
-            ...tokens,
-            isNew: true,
-          };
-        }
-        // const referralDto: CreateReferralEarlyBonusDto = {
-        //   honey: 0,
-        //   accountType: 'COMMON'
-        //     ? this.configService.getOrThrow('COMMON_ACC_BONUS')
-        //     : this.configService.getOrThrow('PREMIUM_ACC_BONUS'),
-        // };
-  
-        // await this.referralService.calculateReferralProfit(
-        //   referralDto,
-        //   referrer.id,
-        // );
-  
-        // await this.referralService.handleNewRegistration(
-        //   referrer.id,
-        //   referralCount,
-        // );
-  
-        return {
-          message: 'Player registered successfully!',
-          player,
-          ...tokens,
-          isNew: true,
-        };
-      }
   
       this.logger.log('Пользователь успешно зарегистрирован');
       return {

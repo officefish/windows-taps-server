@@ -75,10 +75,13 @@ export class GameplayService {
       newBalance += money 
     }
 
+    const currentTime = new Date();
+
     const data = {
       energyLatest: newEnergy,
       balance: newBalance,
-      energyMax: player.energyMax
+      energyMax: player.energyMax,
+      lastEnergyUpdate: currentTime,
     }
 
     this.logger.log(`Balance for user with tgId: ${player.tgId} updated`);
@@ -149,26 +152,36 @@ export class GameplayService {
   ) {
     if (inputData.money === 0) {
       // Если money = 0, выполняем только updateBalanceWithIncome
-      const { incomeAdded } = await this.updateBalanceWithIncome(player);
+      const [incomeUpdate, energyUpdate] = await Promise.all([
+        this.updateBalanceWithIncome(player),
+        this.updateEnergy(player),
+      ]);
+    
+      const { incomeAdded } = incomeUpdate;
+      const { energyLatest, energyMax } = energyUpdate;
   
       return {
         incomeAdded,
         balance: player.balance,  // В случае с 0, баланс остается прежним
-        energyLatest: player.energyLatest,  // Значения энергии не изменяются
-        energyMax: player.energyMax,
+        energyLatest: energyLatest,  // Значения энергии не изменяются
+        energyMax: energyMax,
       };
     }
   
     // Если money != 0, выполняем все три запроса параллельно
-    const [incomeUpdate, balanceUpdate, energyUpdate] = await Promise.all([
+    const [incomeUpdate, balanceUpdate] = await Promise.all([
       this.updateBalanceWithIncome(player),
       this.updateBalance(player, inputData),
-      this.updateEnergy(player),
     ]);
   
     const { incomeAdded } = incomeUpdate;
     const { balance } = balanceUpdate;
-    const { energyLatest, energyMax } = energyUpdate;
+
+    const currentPlayer = await this.prisma.player.findUnique({
+      where: { tgId: player.tgId },
+    });
+
+    const { energyLatest, energyMax } = await this.updateEnergy(currentPlayer);
   
     return {
       incomeAdded,

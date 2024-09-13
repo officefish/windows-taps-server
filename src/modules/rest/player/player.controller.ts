@@ -148,8 +148,8 @@ export class PlayerController {
     if (!player) {
       throw new NotFoundException('User not found');
     }
-    return await this.gameplay.tick(player, body);
-    //return reply.type('application/json').send(data);
+    const data = await this.gameplay.tick(player, body);
+    return reply.type('application/json').send(data);
   }
 
 }

@@ -67,7 +67,8 @@ model Player {
   invitedById           String?                 @db.ObjectId
   invitedBy             Player?                 @relation("UserInvitations", fields: [invitedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
  
-  referrals             Player[]                @relation("UserInvitations")
+  invitations           Player[]                @relation("UserInvitations")
+  referralCode          String                  @unique
 
    // One-to-One relation with DailyQuest
   dailyQuest            DailyQuest?   
@@ -77,6 +78,15 @@ model Player {
   referralCount  Int       @default(0) @ignore
 
   @@map("player")
+}
+
+model Referral {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  referrerId    String   @db.ObjectId
+  referredId    String   @db.ObjectId
+  createdAt     DateTime @default(now())
+
+  @@map("refferal")
 }
 
 

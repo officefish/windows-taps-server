@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsString } from 'class-validator'
+import { IsString, IsUUID } from 'class-validator'
 
 export class TelegramInitDataDto { 
 
@@ -9,4 +9,15 @@ export class TelegramInitDataDto {
     })
     @IsString()
     initData: string;
+}
+
+
+export class RegisterWithReferrerDto extends TelegramInitDataDto { 
+
+  @ApiProperty({ 
+    description: 'User\'s Telegram refferal code (uuid)', 
+    example: "3b241101-e2bb-4255-8caf-4136c566a962" 
+  })
+  @IsUUID()
+  referralCode: string;
 }

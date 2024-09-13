@@ -17,6 +17,32 @@ export class ReferralsService {
     private configService: ConfigService,
   ) {}
 
+  async trackReferral(referrerId: string, referredId: string) {
+    return this.prisma.referral.create({
+      data: {
+        referrerId,
+        referredId,
+      },
+    });
+  }
+
+  async rewardReferrer(referrerId: string) {
+    const referrer = await this.prisma.player.findUnique({ where: { id: referrerId } });
+  
+    // Логика начисления бонусов
+    // await this.prisma.player.update({
+    //   where: { id: referrerId },
+    //   data: { /* обновляем данные пользователя */ },
+    // });
+
+    this.logger.log(`Игрок ${referrer.username} получил награду за приглашение.`);
+
+  }
+
+  async findByReferralCode(referralCode) {
+    return this.prisma.player.findFirst({ where: { referralCode } });
+  }
+
   // async calculateReferralProfit(
   //   dto: CreateReferralEarlyBonusDto,
   //   playerId: string,
