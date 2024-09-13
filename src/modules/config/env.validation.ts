@@ -108,6 +108,9 @@ class EnvironmentVariables {
 
   @IsString()
   COVER_URL: string
+
+  @IsString()
+  SENTRY_DSN: string
 }
 
 export function validate(config: Record<string, unknown>) {

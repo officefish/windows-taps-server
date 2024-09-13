@@ -5,6 +5,16 @@
 # System environment variables 
 .env
 
+# SSL configuration
+/ssl
+
+# NGNIX configuration
+/nginx
+
+# SH tasks
+/sh_tasks
+/system
+
 # Logs
 logs
 *.log
@@ -36,3 +46,5 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+# Sentry Config File
+.sentryclirc

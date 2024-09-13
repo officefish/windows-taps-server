@@ -10,6 +10,9 @@ import { PlayerModule } from '@/modules/rest/player/player.module'
 import { QuestModule } from '@/modules/rest/quest/quest.module'
 import { ShopModule } from '@/modules/rest/shop/shop.module'
 
+import { APP_FILTER } from "@nestjs/core";
+import { SentryGlobalFilter } from "@sentry/nestjs/setup";
+
 @Module({
   imports: [
     PrismaModule,
@@ -24,6 +27,11 @@ import { ShopModule } from '@/modules/rest/shop/shop.module'
     ShopModule
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter,
+    },
+  ],
 })
 export class AppModule {}

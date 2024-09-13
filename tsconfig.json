@@ -17,12 +17,21 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
+
     "paths": {
       "@/*": [
         "./src/*"
       ],
     },
-    "typeRoots": ["./node_modules/@types", "./src/helpers/types"] // Убедитесь, что путь к папке правильный
 
+    // Убедитесь, что путь к папке правильный
+    "typeRoots": ["./node_modules/@types", "./src/helpers/types"],
+
+    "inlineSources": true,
+
+    // Set `sourceRoot` to  "/" to strip the build path prefix
+    // from generated source code references.
+    // This improves issue grouping in Sentry.
+    "sourceRoot": "/"
   }
 }

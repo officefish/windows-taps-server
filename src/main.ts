@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app/app.module'
 import { NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify'
-import { initializeCors, initializeStaticAssets, initializeSwagger } from './bootstrap'
+import { initializeCors, initializeSentry, initializeStaticAssets, initializeSwagger } from './bootstrap'
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -15,6 +15,8 @@ async function bootstrap() {
   initializeCors(app)
   initializeStaticAssets(app)
   initializeSwagger(app)
+
+  initializeSentry(app)
 
 
   /* start server */

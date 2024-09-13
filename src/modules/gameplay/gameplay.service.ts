@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from "@/modules/prisma/prisma.service"; // Подключаем сервис Prisma
 import { Cron, CronExpression } from '@nestjs/schedule'; // Для планирования задач
-import { differenceInHours } from 'date-fns';
+import { differenceInMilliseconds } from 'date-fns';
 
 @Injectable()
 export class GameplayService {
@@ -118,29 +118,24 @@ export class GameplayService {
 
     // Если доход меньше единицы за час, не обновляем баланс и выходим
     if (incomePerHour < 1) {
-      throw new HttpException(
-        'Income per hour is too low to update balance',
-        HttpStatus.BAD_REQUEST
-      );
+      return {
+        newBalance: player.balance,
+        incomeAdded: 0,
+      };
     }
-
-    // Считаем, сколько времени прошло с последнего обновления дохода
+    
+    // Считаем, сколько времени прошло с последнего обновления дохода (в миллисекундах)
     const currentTime = new Date();
-    const hoursPassed = differenceInHours(currentTime, lastIncomeUpdate);
+    const millisecondsPassed = differenceInMilliseconds(currentTime, lastIncomeUpdate);
 
-    // Если прошло менее одного часа, не обновляем баланс
-    if (hoursPassed < 1) {
-      throw new HttpException(
-        'Not enough time has passed since the last income update',
-        HttpStatus.BAD_REQUEST
-      );
-    }
+    // Преобразуем миллисекунды в часы (включая доли часа)
+    const hoursPassed = millisecondsPassed / (1000 * 60 * 60);
 
     // Максимум доход начисляется за 3 часа
     const applicableHours = Math.min(hoursPassed, 3);
 
     // Рассчитываем доход за это время
-    const incomeToAdd = incomePerHour * applicableHours;
+    const incomeToAdd = Math.round(incomePerHour * applicableHours);
 
     // Если итоговый доход меньше 1, не обновляем баланс и время
     if (incomeToAdd < 1) {
