@@ -1,4 +1,5 @@
 import { 
+  BadRequestException,
   Body, 
   Controller, 
   ForbiddenException, 
@@ -27,7 +28,7 @@ import {
 import { PlayerRefreshResponse, PlayerLoginResponse } from './responses'
 
 import { PlayerLoginDto } from './dto'
-import { RegisterWithReferrerDto, TelegramInitDataDto } from './dto/telegram-initial.dto'
+import { RegisterWithCommandDto, TelegramInitDataDto } from './dto/telegram-initial.dto'
 import { TelegramService } from '@/modules/telegram/telegram.service'
 import { ReferralsService } from '../referrals/referrals.service'
 
@@ -88,14 +89,21 @@ export class AuthController {
     description: 'Invalid Telegram Init Data',
   })
 
-  @Post('register-with-referrer')
+  @Post('register-with-command')
   async registerWithReferrer(
-    @Body() body: RegisterWithReferrerDto,
+    @Body() body: RegisterWithCommandDto,
   ): Promise<PlayerLoginResponse> {
 
     //console.log(`initData: ${initial.initData}`)
 
-    const { initData, referralCode } = body
+    const { initData, command } = body
+    //const referralCode = command.split('=')[1]
+    if (!command.startsWith("referrerId=")) {
+      throw new BadRequestException("Invalid command")
+    }
+
+    const parsedCommand = this.authService.parseReferrerIdString(command)
+    const referralCode = parsedCommand?.uuid || null
 
     const valid = this.telegramService.validateInitData(initData);
     if (!valid) {
@@ -115,13 +123,21 @@ export class AuthController {
 
     const response = await this.authService.registerOrLogin(dto, referralCode);
 
+    /* Если пользователь пытается зарегистрировать сам себя, то игнорируем эту попытку */
+    if (response.player.referralCode === referralCode) {
+      return response
+    }
+
+    /* Если пользователь уже зарегистрирова, то игнорируем попытку активации приглашения */
+    if (!response.isNew) {
+      return response
+    }
+
     const referrer = await this.referralService.findByReferralCode(referralCode);
       if (referrer) {
         await this.referralService.trackReferral(referrer.id, response.player.id);
         await this.referralService.rewardReferrer(referrer.id);
       }
-
-    //if (response.message === 'Player logged in') {
 
     return response
   }

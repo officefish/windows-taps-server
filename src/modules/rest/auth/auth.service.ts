@@ -54,6 +54,7 @@ import {
           message: 'Player logged in',
           player: candidate,
           ...tokens,
+          isNew: false,
         };
       }
   
@@ -65,6 +66,11 @@ import {
 
       // Если есть реферальный код, находим кто пригласил
       if (referralCode) {
+
+        if (!this.isValidUUID(referralCode)) {
+          throw new NotFoundException('Invalid referral code');
+        }
+
         const referrer = await this.prismaService.player.findUnique({
           where: { referralCode },
         });
@@ -159,4 +165,37 @@ import {
       }
       return player;
     }
+
+    isValidUUID(uuid) {
+      // Регулярное выражение для проверки формата UUID
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      return uuidRegex.test(uuid);
+    }
+
+    parseReferrerIdString(str) {
+      
+        // Разбиваем строку по знаку "="
+        const parts = str.split("=");
+        if (parts.length === 2) {
+            const referrerId = parts[0];
+            const uuid = parts[1];
+
+            // Проверяем, является ли вторая часть валидным UUID
+            if (this.isValidUUID(uuid)) {
+                return {
+                    referrerId: referrerId,
+                    separator: "=",
+                    uuid: uuid
+                };
+            } else {
+              return null
+              //return "Ошибка: Неверный формат UUID.";
+            }
+        } else {
+          return null  
+          //return "Ошибка: Строка имеет неправильный формат.";
+        }
+    
+    }
+  
   }

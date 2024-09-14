@@ -2,7 +2,7 @@ import { Body, Controller, Get, NotFoundException, Options, Post, Req, Res, UseG
 import { GameplayService } from '@/modules/gameplay/gameplay.service'
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PlayerEnergyResponse, PlayerFarmResponse } from './responses';
-import { Player } from '@/common/decorators';
+import { CurrentUser, Player } from '@/common/decorators';
 import { FarmDto } from './dto/farm.dto';
 import { FastifyRequest, FastifyReply } from 'fastify'; // Импорт FastifyRequest
 import { PlayerGuard } from './guards/player.guard'
@@ -10,6 +10,9 @@ import { PlayerIncomeResponse } from './responses/income.response';
 import { PrismaService } from '@/modules/prisma/prisma.service';
 import { GameplayTickDto } from '@/modules/gameplay/dto/gameplay-tick.dto';
 import { GameplayTickResponse } from '@/modules/gameplay/responses/gameplay-tick.response';
+import { PlayersTokenDto } from '@/modules/token/dto';
+import { GetReferralsQueryDto } from '../referrals/dto';
+import { ReferralsService } from '../referrals/referrals.service';
 
 
 @ApiTags('player')
@@ -17,7 +20,8 @@ import { GameplayTickResponse } from '@/modules/gameplay/responses/gameplay-tick
 export class PlayerController {
   constructor(
     private readonly gameplay: GameplayService,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService, 
+    private readonly referralsService: ReferralsService
   ) {}
 
   @ApiResponse({
@@ -150,6 +154,34 @@ export class PlayerController {
     }
     const data = await this.gameplay.tick(player, body);
     return reply.type('application/json').send(data);
+  }
+
+  @ApiResponse({
+    status: 200,
+    description: 'Gameplay regular tick updated',
+    //type: GameplayTickResponse,
+  })
+  @UseGuards(PlayerGuard)
+  @Post('/refferals')
+  async getRefferals(
+    @CurrentUser() currentUser: PlayersTokenDto,
+    @Body() body: GetReferralsQueryDto,
+    @Res() reply: FastifyReply
+  ) {
+    const { tgId } = currentUser
+
+    /* Player */     
+    const player = await this.referralsService.getReferrerByTgId(tgId, body);
+    if (!player) {
+      throw new NotFoundException('User not found');
+    }
+    const count = await this.referralsService.getReferralsCount(player);
+    return reply.type('application/json').send(
+      {
+        refferals: player.invitations,
+        refferalCode: player.referralCode, 
+        count
+      });
   }
 
 }

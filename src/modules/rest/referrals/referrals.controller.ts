@@ -7,6 +7,10 @@ import {
     Delete,
     //Param,
     Patch,
+    UseGuards,
+    Req,
+    Res,
+    NotFoundException,
   } from '@nestjs/common'
   import { ReferralsService } from './referrals.service'
   import {
@@ -18,18 +22,24 @@ import {
     ApiNotFoundResponse,
     ApiCreatedResponse,
   } from '@nestjs/swagger'
-  import { CurrentUser } from '@/common/decorators'
+  import { CurrentUser, Player } from '@/common/decorators'
   import { PlayersTokenDto } from '@/modules/token/dto'
+
+  import { FastifyRequest, FastifyReply } from 'fastify';
   
   import { 
     GetReferralsQueryDto,
 } from './dto'
+import { PrismaService } from '@/modules/prisma/prisma.service'
   
   @ApiTags('referrals')
   @ApiBearerAuth()
   @Controller('referrals')
   export class ReferralsController {
-    constructor(private readonly referralsService: ReferralsService) {}
+    constructor(
+      private readonly referralsService: ReferralsService,
+      private readonly prisma: PrismaService,
+    ) {}
   
     @Get()
     @ApiOperation({ summary: 'Get referrals' })
@@ -37,9 +47,41 @@ import {
     @ApiResponse({ status: 404, description: 'Player not found.' })
     async getReferrals(
       @CurrentUser() currentUser: PlayersTokenDto,
+      @Req() req: FastifyRequest,
       @Query() query: GetReferralsQueryDto,
     ) {
-      return await this.referralsService.getReferrals(currentUser, query);
+      const { tgId } = currentUser
+  
+      /* Player */
+      const player = await this.prisma.player.findUnique({ where: { tgId } })
+      if (!player) {
+        throw new NotFoundException('User not found');
+      }
+      return await this.referralsService.getReferrals(player, query);
+    }
+
+
+    @Post()
+    @ApiResponse({
+      status: 200,
+      description: 'Gameplay regular tick updated',
+      //type: GameplayTickResponse,
+    })
+    @Post()
+    async getRefferals(
+      @CurrentUser() currentUser: PlayersTokenDto,
+      @Body() body: GetReferralsQueryDto,
+      @Res() reply: FastifyReply
+    ) {
+      const { tgId } = currentUser
+  
+      /* Player */     
+      const player = await this.referralsService.getReferrerByTgId(tgId, body);
+      if (!player) {
+        throw new NotFoundException('User not found');
+      }
+      const count = player.invitations.length
+      return reply.type('application/json').send({player, count});
     }
 
     // @Post('calculate')

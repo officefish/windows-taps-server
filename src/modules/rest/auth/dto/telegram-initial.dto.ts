@@ -12,12 +12,12 @@ export class TelegramInitDataDto {
 }
 
 
-export class RegisterWithReferrerDto extends TelegramInitDataDto { 
+export class RegisterWithCommandDto extends TelegramInitDataDto { 
 
   @ApiProperty({ 
     description: 'User\'s Telegram refferal code (uuid)', 
-    example: "3b241101-e2bb-4255-8caf-4136c566a962" 
+    example: "referrerId=3b241101-e2bb-4255-8caf-4136c566a962" 
   })
-  @IsUUID()
-  referralCode: string;
+  @IsString()
+  command: string;
 }
