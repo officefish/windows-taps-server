@@ -70,7 +70,7 @@ model Player {
   invitations           Player[]                @relation("UserInvitations")
   referralCode          String                  @unique
 
-  tasks                 PlayerTask[]
+  tasks                 TaskOnPlayer[]
 
    // One-to-One relation with DailyQuest
   dailyQuest            DailyQuest?   
@@ -163,11 +163,13 @@ model Category {
   items Item[]
 }
 
-model TemplateTask {
+model Task {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
   title        String
   description  String?
   type         TaskType
+  baunty       Int?
+  bonus        Int?
   target       Int?
   content      String?
   navigate     String?
@@ -175,12 +177,14 @@ model TemplateTask {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   isDaily      Boolean 
-  playerTasks  PlayerTask[]
+  playerTasks  TaskOnPlayer[]
+
+   @@map("task")
 }
 
-model PlayerTask {
+model TaskOnPlayer {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
-  templateTask    TemplateTask?   @relation(fields: [templateTaskId], references: [id])
+  templateTask    Task?           @relation(fields: [templateTaskId], references: [id])
   templateTaskId  String?         @db.ObjectId
   player          Player?         @relation(fields: [playerId], references: [id])
   playerId        String?         @db.ObjectId
@@ -189,6 +193,8 @@ model PlayerTask {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   finishedAt      DateTime?
+
+  @@map("task_on_palyer")
 }
 
 enum TaskType {

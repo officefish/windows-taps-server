@@ -177,11 +177,7 @@ export class GameplayService {
     const { incomeAdded } = incomeUpdate;
     const { balance } = balanceUpdate;
 
-    const currentPlayer = await this.prisma.player.findUnique({
-      where: { tgId: player.tgId },
-    });
-
-    const { energyLatest, energyMax } = await this.updateEnergy(currentPlayer);
+    const { energyLatest, energyMax } = await this.updateEnergy(player);
   
     return {
       incomeAdded,
