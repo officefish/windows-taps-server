@@ -50,6 +50,7 @@ import {
           ...new PlayersTokenDto(candidate),
         });
         await this.tokenService.saveTokens(candidate.id, tokens.refreshToken);
+
         return {
           message: 'Player logged in',
           player: candidate,
@@ -62,11 +63,10 @@ import {
 
       const generatedCode = uuidv4();  // Можно использовать другие методы генерации
 
-      let invitedById = null;
+      // Проверяем реферальный код и находим пригласившего игрока
+      let invitedBy = undefined;
 
-      // Если есть реферальный код, находим кто пригласил
       if (referralCode) {
-
         if (!this.isValidUUID(referralCode)) {
           throw new NotFoundException('Invalid referral code');
         }
@@ -76,21 +76,29 @@ import {
         });
 
         if (referrer) {
-          invitedById = referrer.id;
+          invitedBy = {
+            connect: {
+              id: referrer.id, // Указываем ID пригласившего игрока
+            },
+          };
+          this.logger.log('Contact has been established with the player who made the referral code');
+        } else {
+          throw new NotFoundException('Invalid referral code');
         }
       }
-      
+
+      // Создаём нового игрока
       const player = await this.prismaService.player.create({
         data: {
           ...dto,
-          invitedById,
           referralCode: generatedCode,
           lastLogin: new Date(),
           referralProfit: 0,
           createdAt: new Date(),
+          invitedBy,
         },
       });
-  
+
       const tokens = this.tokenService.generateTokens({
         ...new PlayersTokenDto(player),
       });

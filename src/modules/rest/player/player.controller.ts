@@ -163,12 +163,13 @@ export class PlayerController {
   })
   @UseGuards(PlayerGuard)
   @Post('/refferals')
+  @Player()
   async getRefferals(
-    @CurrentUser() currentUser: PlayersTokenDto,
+    @Req() req: FastifyRequest,
     @Body() body: GetReferralsQueryDto,
     @Res() reply: FastifyReply
   ) {
-    const { tgId } = currentUser
+    const { tgId } = req.currentUser
 
     /* Player */     
     const player = await this.referralsService.getReferrerByTgId(tgId, body);
@@ -178,8 +179,8 @@ export class PlayerController {
     const count = await this.referralsService.getReferralsCount(player);
     return reply.type('application/json').send(
       {
-        refferals: player.invitations,
-        refferalCode: player.referralCode, 
+        referrals: player.invitations,
+        referralCode: player.referralCode, 
         count
       });
   }

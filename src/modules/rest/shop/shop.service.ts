@@ -178,8 +178,6 @@ export class ShopService {
       throw new HttpException('Player not found', HttpStatus.NOT_FOUND);
     }
 
-    
-
     // Найти предмет по itemId
     const item = await this.prisma.item.findUnique({
       where: { id: itemId },
@@ -260,8 +258,8 @@ export class ShopService {
       const item = playerItem.item;
       const level = playerItem.level;
 
-      // Доход предмета = (income / 10) * текущий уровень
-      const itemIncome = (item.income / 10) * level;
+      // Полный доход предмета: базовый доход + 10% от базового дохода, умноженного на уровень предмета
+      const itemIncome = item.income + (item.income * 0.1 * (level - 1))
 
       // Добавляем доход предмета к общему доходу
       totalIncomePerHour += itemIncome;
@@ -307,11 +305,11 @@ export class ShopService {
     }
 
     // Рассчитать стоимость улучшения (10% от цены предмета)
-    const upgradeCost = playerItem.item.price * 0.1;
+    const upgradeCost = (playerItem.item.price * 0.1) * playerItem.level;
 
     // Проверить, есть ли у игрока достаточно средств
     if (player.balance < upgradeCost) {
-      throw new HttpException('Not enough balance to upgrade the item', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Not enough balance to upgrade the item, need ' + upgradeCost + ' , balance is ' + player.balance + '', HttpStatus.BAD_REQUEST);
     }
 
     // Увеличить уровень предмета

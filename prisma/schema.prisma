@@ -44,8 +44,8 @@ model Player {
 
   imageUrl              String?                 @map("image_url")
 
-  firstName             String                  @map("first_name")
-  lastName              String                  @map("last_name")
+  firstName             String?                  @map("first_name")
+  lastName              String?                  @map("last_name")
 
   balance               Float                   @default(0)  
 
@@ -64,11 +64,13 @@ model Player {
 
   token                 PlayerTokens?
 
-  invitedById           String?                 @db.ObjectId
+  invitedById           String?                 @db.ObjectId @map("invited_by_id")
   invitedBy             Player?                 @relation("UserInvitations", fields: [invitedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
  
   invitations           Player[]                @relation("UserInvitations")
   referralCode          String                  @unique
+
+  tasks                 PlayerTask[]
 
    // One-to-One relation with DailyQuest
   dailyQuest            DailyQuest?   
@@ -159,6 +161,47 @@ model Category {
   id    String @id @default(auto()) @map("_id") @db.ObjectId
   name  String
   items Item[]
+}
+
+model TemplateTask {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  title        String
+  description  String?
+  type         TaskType
+  target       Int?
+  content      String?
+  navigate     String?
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  isDaily      Boolean 
+  playerTasks  PlayerTask[]
+}
+
+model PlayerTask {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  templateTask    TemplateTask?   @relation(fields: [templateTaskId], references: [id])
+  templateTaskId  String?         @db.ObjectId
+  player          Player?         @relation(fields: [playerId], references: [id])
+  playerId        String?         @db.ObjectId
+  status          TaskStatus      @default(PENDING)
+  progress        Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  finishedAt      DateTime?
+}
+
+enum TaskType {
+  SUBSCRIBE_CHANNEL
+  INVITE_COUNT
+  DAILY_BAUNTY
+  DAILY_MINIGAME
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
 }
 
 
