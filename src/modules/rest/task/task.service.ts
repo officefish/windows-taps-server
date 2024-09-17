@@ -80,8 +80,67 @@ export class TaskService {
     await Promise.all(taskPromises);
   }
 
-  // Создаем категории и товары
+  async getTasksForPlayer(tgId: string) {
+    // Находим игрока по его Telegram ID
+    const player = await this.prisma.player.findUnique({
+      where: { tgId: tgId },
+    });
 
+    if (!player) {
+      throw new Error(`Player with tgId ${tgId} not found`);
+    }
+
+    // Извлекаем активные задачи (например, не просроченные и ежедневные)
+    const availableTasks = await this.prisma.task.findMany({
+      where: {
+        OR: [
+          { isDaily: true }, // ежедневные задания
+          { expiresAt: { gte: new Date() } }, // задания с активным сроком действия
+        ],
+      },
+    });
+
+    // Проверяем, какие задания уже существуют для игрока
+    const playerTasks = await this.prisma.taskOnPlayer.findMany({
+      where: {
+        playerId: player.id,
+        templateTaskId: { in: availableTasks.map(task => task.id) },
+      },
+    });
+
+    const existingTaskIds = playerTasks.map(pt => pt.templateTaskId);
+
+    // Оставляем только те задания, которые еще не назначены игроку
+    const newTasks = availableTasks.filter(task => !existingTaskIds.includes(task.id));
+
+    // Создаем новые задания для игрока с использованием connect
+    const taskPromises = newTasks.map(task => this.prisma.taskOnPlayer.create({
+      data: {
+        templateTask: {
+          connect: { id: task.id }, // связываем существующую задачу через connect
+        },
+        player: {
+          connect: { id: player.id }, // связываем существующего игрока через connect
+        },
+        status: TaskStatus.PENDING
+      },
+    }));
+
+    await Promise.all(taskPromises);
+
+    // Возвращаем список всех задач игрока, включая уже существующие и новые
+    const allPlayerTasks = await this.prisma.taskOnPlayer.findMany({
+      where: { playerId: player.id },
+      include: {
+        templateTask: true, // Включаем информацию о шаблоне задания
+      },
+    });
+
+    // Проверяем, являентся ли задание уже выполненным
+    // TODO: Реализовать проверку выполнения задания
+
+    return allPlayerTasks;
+  }
 
 }
 
