@@ -87,12 +87,17 @@ export class GameplayService {
     this.logger.log(`Balance for user with tgId: ${player.tgId} updated`);
 
     // Сохраняем обновленное значение энергии и время последнего обновления
-    await this.prisma.player.update({
+    const update_player =await this.prisma.player.update({
       where: { tgId: player.tgId },
       data,
     });
 
-    return data;
+    return {
+      balance: update_player.balance,
+      energyMax: update_player.energyMax,
+      energyLatest: update_player.energyLatest,
+      lastEnergyUpdate: update_player.lastEnergyUpdate
+    }
   }
 
   async updateBalanceWithIncome(player: Player) {
@@ -175,9 +180,7 @@ export class GameplayService {
     ]);
   
     const { incomeAdded } = incomeUpdate;
-    const { balance } = balanceUpdate;
-
-    const { energyLatest, energyMax } = await this.updateEnergy(player);
+    const { balance, energyLatest, energyMax } = balanceUpdate;
   
     return {
       incomeAdded,
