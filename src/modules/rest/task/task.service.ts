@@ -18,6 +18,9 @@ export class TaskService {
       return;
     }
 
+    // Если не ежедневное, установите срок истечения через 3 месяца
+    const expiresAt = new Date(new Date().setMonth(new Date().getMonth() + 3)); 
+
      // Создание категорий и товаров
       const tasks = {
         daily: [
@@ -38,6 +41,7 @@ export class TaskService {
                 title: 'Invite count',
                 target: 3,
                 baunty: 2000,
+                expiresAt,
             },
             { 
                 type: TaskType.SUBSCRIBE_CHANNEL,
@@ -45,6 +49,7 @@ export class TaskService {
                 navigate: '',
                 title: 'Invite count',
                 baunty: 2000,
+                expiresAt,
             }
         ]
       };
@@ -58,24 +63,26 @@ export class TaskService {
   // Функция для создания товаров с зависимостями
   async createTaskTemplates(daily: boolean, tasks: any[]) {
 
-     // Создаем товары для этой категории
-     const taskPromises = [];
-     for (const task of tasks) {
-       const promise = this.prisma.task.create({
-         data: {
-           type: task.type,
-           title: task.title,
-           description: task.description,
-           baunty: task.baunty,
-           bonus: task.bonus,
-           isDaily: daily,
-           content: task.content,
-           navigate: task.navigate,
-           target: task.target,
-         },
-       });
-       taskPromises.push(promise);
-     }
+      // Создаем товары для этой категории
+  const taskPromises = [];
+  for (const task of tasks) {
+
+    const promise = this.prisma.task.create({
+      data: {
+        type: task.type,
+        title: task.title,
+        description: task.description,
+        baunty: task.baunty,
+        bonus: task.bonus,
+        isDaily: daily,
+        content: task.content,
+        navigate: task.navigate,
+        target: task.target,
+        expiresAt: task.expiresAt, // Устанавливаем срок истечения, если задание не ежедневное
+      },
+    });
+    taskPromises.push(promise);
+  }
 
     await Promise.all(taskPromises);
   }
