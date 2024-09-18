@@ -98,14 +98,15 @@ export class TaskService {
     }
 
     // Извлекаем активные задачи (например, не просроченные и ежедневные)
-    const availableTasks = await this.prisma.task.findMany({
-      where: {
-        OR: [
-          { isDaily: true }, // ежедневные задания
-          { expiresAt: { gte: new Date() } }, // задания с активным сроком действия
-        ],
-      },
-    });
+    // const availableTasks = await this.prisma.task.findMany({
+    //   where: {
+    //     OR: [
+    //       { isDaily: true }, // ежедневные задания
+    //       { expiresAt: { gte: new Date() } }, // задания с активным сроком действия
+    //     ],
+    //   },
+    // });
+    const availableTasks = await this.prisma.task.findMany({})
 
     // Проверяем, какие задания уже существуют для игрока
     const playerTasks = await this.prisma.taskOnPlayer.findMany({

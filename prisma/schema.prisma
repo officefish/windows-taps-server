@@ -194,7 +194,7 @@ model TaskOnPlayer {
   updatedAt       DateTime        @updatedAt
   finishedAt      DateTime?
 
-  @@map("task_on_palyer")
+  @@map("task_on_player")
 }
 
 enum TaskType {
