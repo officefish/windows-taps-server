@@ -3,8 +3,8 @@ import { PrismaModule } from '@/modules/prisma/prisma.module'
 import { PrismaService } from '@/modules/prisma/prisma.service'
 import { PlayerModule } from '../player/player.module'
 import { TokenModule } from '@/modules/token/token.module'
-//import { ShopController } from './shop.controller'
-//import { ShopService } from './shop.service'
+import { TaskController } from './task.controller'
+import { TaskService } from './task.service'
 
 @Module({
   imports: [
@@ -12,7 +12,7 @@ import { TokenModule } from '@/modules/token/token.module'
    PlayerModule,
    TokenModule,
   ],
-  controllers : [],
-  providers: [PrismaService, ],
+  controllers : [TaskController],
+  providers: [PrismaService, TaskService],
 })
-export class ShopModule {}
+export class TaskModule {}

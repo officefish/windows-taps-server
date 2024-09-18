@@ -12,6 +12,7 @@ import { ShopModule } from '@/modules/rest/shop/shop.module'
 
 import { APP_FILTER } from "@nestjs/core";
 import { SentryGlobalFilter } from "@sentry/nestjs/setup";
+import { TaskModule } from '@/modules/rest/task/task.module'
 
 @Module({
   imports: [
@@ -24,7 +25,8 @@ import { SentryGlobalFilter } from "@sentry/nestjs/setup";
     GameplayModule,
     PlayerModule,
     QuestModule,
-    ShopModule
+    ShopModule,
+    TaskModule,
   ],
   controllers: [],
   providers: [
