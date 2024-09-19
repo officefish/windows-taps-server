@@ -1,6 +1,8 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from "@/modules/prisma/prisma.service"; // Подключаем сервис Prisma
-import { TaskType, TaskStatus } from '@prisma/client';
+import { TaskType, TaskStatus, Player, TaskOnPlayer, Task } from '@prisma/client';
+import { QuestService } from '../quest/quest.service';
+import { TelegramService } from '@/modules/telegram/telegram.service';
 
 @Injectable()
 export class TaskService {
@@ -8,6 +10,8 @@ export class TaskService {
   
   constructor(
     private readonly prisma: PrismaService, // Ensure proper readonly
+    private readonly quest: QuestService,
+    private readonly telegram: TelegramService
   ) {}
 
   async brootforceCreateTasks() {
@@ -45,9 +49,9 @@ export class TaskService {
             },
             { 
                 type: TaskType.SUBSCRIBE_CHANNEL,
-                content: '',
-                navigate: '',
-                title: 'Invite count',
+                content: 'kubiki_io',
+                navigate: 'https://t.me/kubiki_io',
+                title: 'Subscribe channel',
                 baunty: 2000,
                 expiresAt,
             }
@@ -144,10 +148,116 @@ export class TaskService {
       },
     });
 
-    // Проверяем, являентся ли задание уже выполненным
-    // TODO: Реализовать проверку выполнения задания
-
     return allPlayerTasks;
+  }
+
+  async checkCurrentTaskStatus(player: Player) {
+    const allPlayerTasks = await this.prisma.taskOnPlayer.findMany({
+      where: { playerId: player.id },
+      include: {
+        templateTask: true, // Включаем информацию о шаблоне задания
+      },
+    });
+
+    const updatedTasks = allPlayerTasks.map(task => {
+      switch (task.templateTask.type) {
+        case TaskType.SUBSCRIBE_CHANNEL:
+          this.checkSubscription(player, task, task.templateTask)
+          break;
+        case TaskType.INVITE_COUNT:
+          this.checkInviteCount(player, task, task.templateTask)
+          break;
+        case TaskType.DAILY_MINIGAME:
+          this.checkDailyMinigame(player, task)
+          break;
+        case TaskType.DAILY_BAUNTY:
+          this.checkDailyBaunty(player, task)
+          break;
+      }
+    });
+
+    return updatedTasks;
+  }
+
+  async checkSubscription(player: Player, taskOnPlayer: TaskOnPlayer, task: Task) {
+
+    if (taskOnPlayer.status === TaskStatus.COMPLETED) {
+      return taskOnPlayer
+    }
+
+    const isSubscribed = await this.telegram.checkUserSubscription(task.content, player.tgId)
+    if (!isSubscribed) {
+      return taskOnPlayer
+    }
+
+    const newTaskOnPlayer = await this.prisma.taskOnPlayer.update({
+      where: { id: taskOnPlayer.id },
+      data: { status: TaskStatus.COMPLETED },
+    })
+
+    await this.prisma.player.update({
+      where: { id: player.id },
+      data: { balance: { increment: task.baunty } },
+    })
+
+    return newTaskOnPlayer
+  }
+
+  // Проверка количества приглашений
+  async checkInviteCount(player: Player, taskOnPlayer: TaskOnPlayer, task:Task) {
+    const referrals = await this.prisma.referral.findMany({
+      where: { referrerId: player.id },
+    })
+
+    if (taskOnPlayer.status === TaskStatus.COMPLETED) {
+      return taskOnPlayer
+    }
+
+    if (!referrals || referrals.length === 0) {
+      return taskOnPlayer
+    }
+
+    if (referrals.length < task.target) {
+      const newTaskOnPlayer = await this.prisma.taskOnPlayer.update({
+        where: { id: taskOnPlayer.id },
+        data: { status: TaskStatus.IN_PROGRESS },
+      })
+      return newTaskOnPlayer
+    }
+
+    const newTaskOnPlayer = await this.prisma.taskOnPlayer.update({
+      where: { id: taskOnPlayer.id },
+      data: { status: TaskStatus.COMPLETED },
+    })
+
+    await this.prisma.player.update({
+      where: { id: player.id },
+      data: { balance: { increment: task.baunty } },
+    })
+
+    return newTaskOnPlayer
+  }
+
+  async checkDailyMinigame(player: Player, task: TaskOnPlayer) {
+    // TODO: Проверка дневного мини-игрового задания
+    return task
+  }
+
+  async checkDailyBaunty(player: Player, taskOnPlayer: TaskOnPlayer) {
+    const { claimedToday } = await this.quest.getDailyRewardInfo(player.tgId);
+    if (claimedToday) {
+      const newTaskOnPlayer = await this.prisma.taskOnPlayer.update({
+        where: { id: taskOnPlayer.id },
+        data: { status: TaskStatus.COMPLETED },
+      })
+  
+      return newTaskOnPlayer
+    } 
+    const newTaskOnPlayer = await this.prisma.taskOnPlayer.update({
+      where: { id: taskOnPlayer.id },
+      data: { status: TaskStatus.PENDING },
+    })
+    return newTaskOnPlayer
   }
 
 }

@@ -3,12 +3,19 @@ import { Injectable } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { AppConfigService } from '../config/config.service';
 import * as qs from 'querystring'; // Use querystring to easily parse URL-encoded strings
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class TelegramService {
     constructor(
-        private readonly config: AppConfigService) {}
+        private readonly config: AppConfigService,
+        private readonly httpService: HttpService
+      ) {}
 
+  getTelegramApiUrl() {
+    return `https://api.telegram.org/bot${this.config.getTelegramBotToken()}`
+  }     
+      
   validateInitData(initData: string): boolean {
     const token = this.config.getTelegramBotToken();
 
@@ -30,32 +37,6 @@ export class TelegramService {
 
     return hash === hmac;
 
-    // // Шаг 1: Генерируем secretKey
-    // const secretKey = crypto.createHmac('sha256', token).update('WebAppData').digest();
-  
-    // // Шаг 2: Парсим initData
-    // const parsedData = new URLSearchParams(initData);
-  
-    // // Шаг 3: Формируем строку checkString
-    // const checkString = [...parsedData.entries()]
-    //   .filter(([key]) => key !== 'hash')  // Исключаем 'hash'
-    //   .sort(([a], [b]) => a.localeCompare(b))  // Сортируем ключи по алфавиту
-    //   .map(([key, value]) => `${key}=${value}`)  // Форматируем как key=value
-    //   .join('\n');  // Разделяем символом перевода строки
-  
-    // console.log('CheckString:', checkString);  // Логируем для проверки
-  
-    // // Шаг 4: Получаем hash из parsedData
-    // const hash = parsedData.get('hash');
-  
-    // // Шаг 5: Генерируем HMAC с использованием secretKey и checkString
-    // const hmac = crypto.createHmac('sha256', secretKey).update(checkString).digest('hex');
-
-    // console.log('hash', hash);  // Логируем для проверки
-    // console.log('hmac', hmac);  // Логируем для проверки
-
-    // // Шаг 6: Сравниваем с переданным hash
-    // return hmac === hash;
   }
 
   extractUserData(initData: string): TelegramUserType {
@@ -76,5 +57,21 @@ export class TelegramService {
     };
     
     return user;
+  }
+
+  // Проверка статуса пользователя в канале
+  async checkUserSubscription(channelUsername: string, tgId: string): Promise<boolean> {
+    try {
+      const url = `${this.getTelegramApiUrl()}/getChatMember?chat_id=@${channelUsername}&user_id=${tgId}`;
+      const response = await this.httpService.get(url).toPromise();
+      const data = response.data;
+
+      // Проверяем статус пользователя
+      const status = data.result.status;
+      return status === 'member' || status === 'administrator' || status === 'creator';
+    } catch (error) {
+      console.error('Error checking subscription status:', error);
+      return false;
+    }
   }
 }
