@@ -9,16 +9,21 @@ import { QuestModule } from '../quest/quest.module'
 import { QuestService } from '../quest/quest.service'
 import { TelegramModule } from '@/modules/telegram/telegram.module'
 import { TelegramService } from '@/modules/telegram/telegram.service'
+import { AppConfigModule } from '@/modules/config/config.module'
+import { AppConfigService } from '@/modules/config/config.service'
+import { HttpModule, HttpService } from '@nestjs/axios'
 
 @Module({
   imports: [
+   AppConfigModule, 
    PrismaModule,
    PlayerModule,
    TokenModule,
    QuestModule,
-   TelegramModule
+   TelegramModule,
+   HttpModule,
   ],
   controllers : [TaskController],
-  providers: [PrismaService, TaskService, QuestService, TelegramService],
+  providers: [PrismaService, TaskService, QuestService, TelegramService, AppConfigService],
 })
 export class TaskModule {}
