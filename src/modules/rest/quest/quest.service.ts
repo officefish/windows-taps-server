@@ -139,9 +139,9 @@ export class QuestService {
     }
   }
 
-  async getDailyRewardInfo(tgId: string) {
+  async getDailyRewardInfo(player: Player) {
     // Получаем данные о игроке и его ежедневном квесте
-    const dailyQuest = await this.getDailyQuestByTgId(tgId);
+    const dailyQuest = await this.getDailyQuestByTgId(player.tgId);
   
     const today = new Date();
     const oneDay = 24 * 60 * 60 * 1000; // Количество миллисекунд в дне
@@ -204,7 +204,7 @@ export class QuestService {
      if (minigame.isBlocked && minigame.blockUntil && isBefore(currentTime, minigame.blockUntil)) {
       const remainingTime = (minigame.blockUntil.getTime() - currentTime.getTime()) / 1000 / 60;
       return {
-        message: `Игра заблокирована. Осталось времени до разблокировки: ${Math.ceil(remainingTime)} минут.`,
+        //message: `Игра заблокирована. Осталось времени до разблокировки: ${Math.ceil(remainingTime)} минут.`,
         isBlocked: true,
         win: false,
         remainingTime: Math.ceil(remainingTime),
@@ -229,7 +229,7 @@ export class QuestService {
         },
       })
       return {
-        message: 'Вы победили! Игра заблокирована на 24 часа.',
+        //message: 'Вы победили! Игра заблокирована на 24 часа.',
         isBlocked: true,
         win: true,
         remainingTime: addHours(currentTime, 24).getTime() - currentTime.getTime(),
@@ -244,7 +244,7 @@ export class QuestService {
         },
       });
       return {
-        message: 'Вы проиграли! Игра заблокирована на 30 минут.',
+        //message: 'Вы проиграли! Игра заблокирована на 30 минут.',
         isBlocked: true,
         win: true,
         remainingTime: addMinutes(currentTime, 30).getTime() - currentTime.getTime(),
@@ -265,9 +265,10 @@ export class QuestService {
     // Если мини-игры нет, она ещё не создана, значит игра доступна
     if (!minigame) {
       return {
-        message: 'Игра доступна.',
+        //message: 'Игра доступна.',
         isBlocked: false,
         remainingTime: 0,
+        win: false,
       };
     }
   
@@ -275,17 +276,19 @@ export class QuestService {
     if (minigame.isBlocked && minigame.blockUntil && isBefore(currentTime, minigame.blockUntil)) {
       const remainingTime = (minigame.blockUntil.getTime() - currentTime.getTime()) / 1000 / 60;
       return {
-        message: `Игра заблокирована. Осталось времени до разблокировки: ${Math.ceil(remainingTime)} минут.`,
+        //message: `Игра заблокирована. Осталось времени до разблокировки: ${Math.ceil(remainingTime)} минут.`,
         isBlocked: true,
         remainingTime: Math.ceil(remainingTime), // Оставшееся время в минутах
+        win: false,
       };
     }
   
     // Если игра не заблокирована
     return {
-      message: 'Игра доступна.',
+      //message: 'Игра доступна.',
       isBlocked: false,
       remainingTime: 0,
+      win: false,
     };
   }
 }

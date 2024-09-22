@@ -268,7 +268,7 @@ export class TaskService {
       })
       return
     } 
-    
+
     await this.prisma.taskOnPlayer.update({
       where: { id: task.id },
       data: { status: TaskStatus.PENDING },
@@ -276,7 +276,7 @@ export class TaskService {
   }
 
   async checkDailyBaunty(player: Player, taskOnPlayer: TaskOnPlayer) {
-    const { claimedToday } = await this.quest.getDailyRewardInfo(player.tgId);
+    const { claimedToday } = await this.quest.getDailyRewardInfo(player);
     if (claimedToday) {
       await this.prisma.taskOnPlayer.update({
         where: { id: taskOnPlayer.id },

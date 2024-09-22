@@ -46,3 +46,42 @@ export class DailyRewardInfoResponse {
       })
       streak: number
 }
+
+export class MinigameInfoResponse {
+  @ApiProperty({
+      description: 'If player win game',
+      example: 300,
+      required: true,
+    })
+    win: boolean
+
+    @ApiProperty({
+      description: 'Time to next attempt',
+      example: 300,
+      required: true,
+    })
+    remainingTime: number
+
+    @ApiProperty({
+      description: 'If game is blocked',
+      example: 300,
+      required: true,
+    })
+    isBlocked: boolean
+}
+
+export class QuestInfoResponse {
+  @ApiProperty({
+    description: 'Information about daily rewards',
+    type: DailyRewardInfoResponse,
+    required: true,
+  })
+  dailyReward: DailyRewardInfoResponse;
+
+  @ApiProperty({
+    description: 'Information about minigame status',
+    type: MinigameInfoResponse,
+    required: true,
+  })
+  minigame: MinigameInfoResponse;
+}

@@ -4,7 +4,7 @@ import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Player } from '@/common/decorators';
 import { FastifyRequest, FastifyReply } from 'fastify'; // Импорт FastifyRequest
 import { PlayerGuard } from '@/modules/rest/player/guards/player.guard'
-import { DailyRewardInfoResponse, DailyRewardResponse } from './responses';
+import { DailyRewardInfoResponse, DailyRewardResponse, MinigameInfoResponse, QuestInfoResponse } from './responses';
 import { PrismaService } from '@/modules/prisma/prisma.service';
 
 
@@ -48,7 +48,11 @@ export class QuestController {
     @Res() reply: FastifyReply
   ) {
     const { tgId } = req.currentUser
-    const data = await this.quest.getDailyRewardInfo(tgId);
+    const player = await this.prisma.player.findUnique({ where: { tgId }})
+    if (!player) {
+      throw new NotFoundException('User not found');
+    }
+    const data = await this.quest.getDailyRewardInfo(player);
     return reply.type('application/json').send(data);
   }
 
@@ -73,6 +77,60 @@ export class QuestController {
 
     const data = await this.quest.playMiniGame(player, body);
     return reply.type('application/json').send(data);
+  }
+
+  @ApiResponse({
+    status: 200,
+    description: 'Player get both daily reward and minigame info',
+    type: MinigameInfoResponse,
+  })
+  @UseGuards(PlayerGuard)
+  @Post('minigame/info')
+  @Player()
+  async getMinigameInfo(
+    @Body() body: {energy?: number},
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply
+  ) {
+
+    const { tgId } = req.currentUser
+    const player = await this.prisma.player.findUnique({ where: { tgId }})
+    if (!player) {
+      throw new NotFoundException('User not found');
+    }
+
+    const minigame = await this.quest.isGameAvailable(player);
+    return reply.type('application/json').send({
+      minigame
+    });
+  }
+
+  @ApiResponse({
+    status: 200,
+    description: 'Player get both daily reward and minigame info',
+    type: QuestInfoResponse,
+  })
+  @UseGuards(PlayerGuard)
+  @Post('info')
+  @Player()
+  async getQuestInfo(
+    @Body() body: {energy?: number},
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply
+  ) {
+
+    const { tgId } = req.currentUser
+    const player = await this.prisma.player.findUnique({ where: { tgId }})
+    if (!player) {
+      throw new NotFoundException('User not found');
+    }
+
+    const dailyReward = await this.quest.getDailyRewardInfo(player);
+    const minigame = await this.quest.isGameAvailable(player);
+    return reply.type('application/json').send({
+      dailyReward,
+      minigame
+    });
   }
 
 }
