@@ -79,6 +79,8 @@ model Player {
   items                 ItemOnPlayer[]          
   referralCount  Int       @default(0) @ignore
 
+  minigame              Minigame?               
+
   @@map("player")
 }
 
@@ -210,4 +212,21 @@ enum TaskStatus {
   COMPLETED
 }
 
+enum MinigameType {
+  FIFTEEN_PUZZLE
+}
 
+model Minigame {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  lastPlayed    DateTime    @default(now())
+  isBlocked     Boolean     @default(false)
+  blockUntil    DateTime?
+  wins          Int         @default(0)
+  playerId      String      @unique @map("player_id") @db.ObjectId
+  player        Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  type          MinigameType @default(FIFTEEN_PUZZLE)
+  baunty        Int          @default(500)
+  
+  @@map("minigame")
+}

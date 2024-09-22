@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from "@/modules/prisma/prisma.service"; // Подключаем сервис Prisma
+import { Player } from '@prisma/client';
+import { addHours, addMinutes, isBefore, subHours } from 'date-fns';
+
 
 @Injectable()
 export class QuestService {
@@ -170,6 +173,119 @@ export class QuestService {
       claimedToday,                          // Забирал ли игрок награду сегодня
       streak: dailyQuest.dailyQuestStreak,    // Текущий стрик (количество дней подряд)
       nextReward                             // Награда за следующий день
+    };
+  }
+
+  async playMiniGame(player: Player, 
+    medium: {win: boolean, combination?: string, steps?: string}
+  ) {
+    let minigame = await this.prisma.minigame.findFirst({
+      where: {
+        playerId: player.id,
+      }
+    })
+
+    const currentTime = new Date();
+
+    if (!minigame) {
+      minigame = await this.prisma.minigame.create({
+        data: {
+          lastPlayed: currentTime,
+          player: {
+            connect: {
+              id: player.id, // Связь с пользователем через connect
+            },
+          },
+        }
+      })
+    }
+
+     // Проверка блокировки игры
+     if (minigame.isBlocked && minigame.blockUntil && isBefore(currentTime, minigame.blockUntil)) {
+      const remainingTime = (minigame.blockUntil.getTime() - currentTime.getTime()) / 1000 / 60;
+      return {
+        message: `Игра заблокирована. Осталось времени до разблокировки: ${Math.ceil(remainingTime)} минут.`,
+        isBlocked: true,
+        win: false,
+        remainingTime: Math.ceil(remainingTime),
+      }
+    }
+
+
+    if (medium.win) {
+      await this.prisma.minigame.update({
+        where: { id: minigame.id },
+        data: {
+          wins: minigame.wins + 1,
+          lastPlayed: currentTime,
+          isBlocked: true,
+          blockUntil: addHours(currentTime, 24), // Блокируем на 24 часа
+        },
+      });
+      await this.prisma.player.update({
+        where: { id: player.id },
+        data: {
+          balance: player.balance + minigame.baunty,
+        },
+      })
+      return {
+        message: 'Вы победили! Игра заблокирована на 24 часа.',
+        isBlocked: true,
+        win: true,
+        remainingTime: addHours(currentTime, 24).getTime() - currentTime.getTime(),
+      } 
+    } else {
+      await this.prisma.minigame.update({
+        where: { id: minigame.id },
+        data: {
+          lastPlayed: currentTime,
+          isBlocked: true,
+          blockUntil: addMinutes(currentTime, 30), // Блокируем на 30 минут
+        },
+      });
+      return {
+        message: 'Вы проиграли! Игра заблокирована на 30 минут.',
+        isBlocked: true,
+        win: true,
+        remainingTime: addMinutes(currentTime, 30).getTime() - currentTime.getTime(),
+      } 
+    }
+  }
+
+  async isGameAvailable(player: Player) {
+    const currentTime = new Date();
+  
+    // Ищем мини-игру игрока
+    const minigame = await this.prisma.minigame.findFirst({
+      where: {
+        playerId: player.id,
+      }
+    });
+  
+    // Если мини-игры нет, она ещё не создана, значит игра доступна
+    if (!minigame) {
+      return {
+        message: 'Игра доступна.',
+        isBlocked: false,
+        remainingTime: 0,
+      };
+    }
+  
+    // Проверка блокировки игры
+    if (minigame.isBlocked && minigame.blockUntil && isBefore(currentTime, minigame.blockUntil)) {
+      const remainingTime = (minigame.blockUntil.getTime() - currentTime.getTime()) / 1000 / 60;
+      return {
+        message: `Игра заблокирована. Осталось времени до разблокировки: ${Math.ceil(remainingTime)} минут.`,
+        isBlocked: true,
+        remainingTime: Math.ceil(remainingTime), // Оставшееся время в минутах
+      };
+    }
+  
+    // Если игра не заблокирована
+    return {
+      message: 'Игра доступна.',
+      isBlocked: false,
+      remainingTime: 0,
     };
   }
 }

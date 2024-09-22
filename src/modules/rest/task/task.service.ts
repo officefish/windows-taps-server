@@ -101,7 +101,19 @@ export class TaskService {
       throw new Error(`Player with tgId ${tgId} not found`);
     }
 
-    // Извлекаем активные задачи (например, не просроченные и ежедневные)
+    const playerTasks = await this.prisma.taskOnPlayer.findMany({
+      where: {
+        playerId: player.id,
+      },
+      include: {
+        templateTask: true, // Включаем информацию о шаблоне задания
+      },
+    })
+    if (playerTasks.length > 0) {
+      return playerTasks
+    }
+
+    //Извлекаем активные задачи (например, не просроченные и ежедневные)
     // const availableTasks = await this.prisma.task.findMany({
     //   where: {
     //     OR: [
@@ -113,20 +125,20 @@ export class TaskService {
     const availableTasks = await this.prisma.task.findMany({})
 
     // Проверяем, какие задания уже существуют для игрока
-    const playerTasks = await this.prisma.taskOnPlayer.findMany({
-      where: {
-        playerId: player.id,
-        templateTaskId: { in: availableTasks.map(task => task.id) },
-      },
-    });
+    // const playerTasks = await this.prisma.taskOnPlayer.findMany({
+    //   where: {
+    //     playerId: player.id,
+    //     templateTaskId: { in: availableTasks.map(task => task.id) },
+    //   },
+    // });
 
-    const existingTaskIds = playerTasks.map(pt => pt.templateTaskId);
+    // const existingTaskIds = playerTasks.map(pt => pt.templateTaskId);
 
-    // Оставляем только те задания, которые еще не назначены игроку
-    const newTasks = availableTasks.filter(task => !existingTaskIds.includes(task.id));
+    // // Оставляем только те задания, которые еще не назначены игроку
+    // const newTasks = availableTasks.filter(task => !existingTaskIds.includes(task.id));
 
     // Создаем новые задания для игрока с использованием connect
-    const taskPromises = newTasks.map(task => this.prisma.taskOnPlayer.create({
+    const taskPromises = availableTasks.map(task => this.prisma.taskOnPlayer.create({
       data: {
         templateTask: {
           connect: { id: task.id }, // связываем существующую задачу через connect
@@ -136,18 +148,19 @@ export class TaskService {
         },
         status: TaskStatus.PENDING
       },
+      include: {
+        templateTask: true, // Включаем информацию о шаблоне задания
+      },
     }));
 
     await Promise.all(taskPromises);
-
-    // Возвращаем список всех задач игрока, включая уже существующие и новые
+    // // Возвращаем список всех задач игрока, включая уже существующие и новые
     const allPlayerTasks = await this.prisma.taskOnPlayer.findMany({
       where: { playerId: player.id },
       include: {
         templateTask: true, // Включаем информацию о шаблоне задания
       },
     });
-
     return allPlayerTasks;
   }
 
@@ -159,38 +172,46 @@ export class TaskService {
       },
     });
 
-    const updatedTasks = allPlayerTasks.map(task => {
-      switch (task.templateTask.type) {
-        case TaskType.SUBSCRIBE_CHANNEL:
-          this.checkSubscription(player, task, task.templateTask)
-          break;
-        case TaskType.INVITE_COUNT:
-          this.checkInviteCount(player, task, task.templateTask)
-          break;
-        case TaskType.DAILY_MINIGAME:
-          this.checkDailyMinigame(player, task)
-          break;
-        case TaskType.DAILY_BAUNTY:
-          this.checkDailyBaunty(player, task)
-          break;
-      }
-    });
+     // Process tasks with async/await and map to return updated tasks
+    await Promise.all(
+      allPlayerTasks.map(async (task) => {
+        switch (task.templateTask.type) {
+          case TaskType.SUBSCRIBE_CHANNEL:
+            return this.checkSubscription(player, task, task.templateTask);
+          case TaskType.INVITE_COUNT:
+            return this.checkInviteCount(player, task, task.templateTask);
+          case TaskType.DAILY_MINIGAME:
+            return this.checkDailyMinigame(player, task);
+          case TaskType.DAILY_BAUNTY:
+            return this.checkDailyBaunty(player, task);
+          default:
+            return task; // Return the task unchanged if no specific logic is needed
+        }
+      })
+    );
 
+    const updatedTasks = await this.prisma.taskOnPlayer.findMany({
+      where: { playerId: player.id },
+      include: {
+        templateTask: true, // Включаем информацию о шаблоне задания
+      },
+    });
     return updatedTasks;
+
   }
 
   async checkSubscription(player: Player, taskOnPlayer: TaskOnPlayer, task: Task) {
 
     if (taskOnPlayer.status === TaskStatus.COMPLETED) {
-      return taskOnPlayer
+      return 
     }
 
     const isSubscribed = await this.telegram.checkUserSubscription(task.content, player.tgId)
     if (!isSubscribed) {
-      return taskOnPlayer
+      return 
     }
 
-    const newTaskOnPlayer = await this.prisma.taskOnPlayer.update({
+    await this.prisma.taskOnPlayer.update({
       where: { id: taskOnPlayer.id },
       data: { status: TaskStatus.COMPLETED },
     })
@@ -200,7 +221,6 @@ export class TaskService {
       data: { balance: { increment: task.baunty } },
     })
 
-    return newTaskOnPlayer
   }
 
   // Проверка количества приглашений
@@ -210,22 +230,22 @@ export class TaskService {
     })
 
     if (taskOnPlayer.status === TaskStatus.COMPLETED) {
-      return taskOnPlayer
+      return 
     }
 
     if (!referrals || referrals.length === 0) {
-      return taskOnPlayer
+      return 
     }
 
     if (referrals.length < task.target) {
-      const newTaskOnPlayer = await this.prisma.taskOnPlayer.update({
+      await this.prisma.taskOnPlayer.update({
         where: { id: taskOnPlayer.id },
         data: { status: TaskStatus.IN_PROGRESS },
       })
-      return newTaskOnPlayer
+      return 
     }
 
-    const newTaskOnPlayer = await this.prisma.taskOnPlayer.update({
+    await this.prisma.taskOnPlayer.update({
       where: { id: taskOnPlayer.id },
       data: { status: TaskStatus.COMPLETED },
     })
@@ -235,29 +255,39 @@ export class TaskService {
       data: { balance: { increment: task.baunty } },
     })
 
-    return newTaskOnPlayer
   }
 
   async checkDailyMinigame(player: Player, task: TaskOnPlayer) {
-    // TODO: Проверка дневного мини-игрового задания
-    return task
+    const status = await this.quest.isGameAvailable(player);
+    if (status.isBlocked) {
+      
+      // we also can change task status to pending or completed depends on remaining time
+      await this.prisma.taskOnPlayer.update({
+        where: { id: task.id },
+        data: { status: TaskStatus.COMPLETED },
+      })
+      return
+    } 
+    
+    await this.prisma.taskOnPlayer.update({
+      where: { id: task.id },
+      data: { status: TaskStatus.PENDING },
+    })
   }
 
   async checkDailyBaunty(player: Player, taskOnPlayer: TaskOnPlayer) {
     const { claimedToday } = await this.quest.getDailyRewardInfo(player.tgId);
     if (claimedToday) {
-      const newTaskOnPlayer = await this.prisma.taskOnPlayer.update({
+      await this.prisma.taskOnPlayer.update({
         where: { id: taskOnPlayer.id },
         data: { status: TaskStatus.COMPLETED },
       })
-  
-      return newTaskOnPlayer
+      return
     } 
-    const newTaskOnPlayer = await this.prisma.taskOnPlayer.update({
+    await this.prisma.taskOnPlayer.update({
       where: { id: taskOnPlayer.id },
       data: { status: TaskStatus.PENDING },
     })
-    return newTaskOnPlayer
   }
 
 }
