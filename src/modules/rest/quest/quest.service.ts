@@ -274,11 +274,10 @@ export class QuestService {
   
     // Проверка блокировки игры
     if (minigame.isBlocked && minigame.blockUntil && isBefore(currentTime, minigame.blockUntil)) {
-      const remainingTime = (minigame.blockUntil.getTime() - currentTime.getTime()) / 1000 / 60;
       return {
         //message: `Игра заблокирована. Осталось времени до разблокировки: ${Math.ceil(remainingTime)} минут.`,
         isBlocked: true,
-        remainingTime: Math.ceil(remainingTime), // Оставшееся время в минутах
+        remainingTime: Math.max(minigame.blockUntil.getTime() - currentTime.getTime(), 0),
         win: false,
       };
     }

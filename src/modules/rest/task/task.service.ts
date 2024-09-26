@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from "@/modules/prisma/prisma.service"; // Подключаем сервис Prisma
 import { TaskType, TaskStatus, Player, TaskOnPlayer, Task } from '@prisma/client';
 import { QuestService } from '../quest/quest.service';
@@ -30,28 +30,28 @@ export class TaskService {
         daily: [
           { 
             type: TaskType.DAILY_BAUNTY,
-            title: 'Daily baunty',
+            title: 'Ежидневная награда',
             baunty: 150,
             bonus: 30
           },
           {
             type: TaskType.DAILY_MINIGAME,
-            title: 'Daily minigame',
+            title: 'Мини игра',
           }
         ],
         season: [
             { 
                 type: TaskType.INVITE_COUNT,
-                title: 'Invite count',
+                title: 'Пригласи трех друзей',
                 target: 3,
                 baunty: 2000,
                 expiresAt,
             },
             { 
                 type: TaskType.SUBSCRIBE_CHANNEL,
-                content: 'kubiki_io',
-                navigate: 'https://t.me/kubiki_io',
-                title: 'Subscribe channel',
+                content: 'portal_okon',
+                navigate: 'https://t.me/portal_okon',
+                title: 'Подпишись на канал',
                 baunty: 2000,
                 expiresAt,
             }
@@ -202,7 +202,8 @@ export class TaskService {
 
   async checkSubscription(player: Player, taskOnPlayer: TaskOnPlayer, task: Task) {
 
-    if (taskOnPlayer.status === TaskStatus.COMPLETED) {
+    if (taskOnPlayer.status === TaskStatus.COMPLETED 
+      || taskOnPlayer.status === TaskStatus.READY) {
       return 
     }
 
@@ -213,7 +214,7 @@ export class TaskService {
 
     await this.prisma.taskOnPlayer.update({
       where: { id: taskOnPlayer.id },
-      data: { status: TaskStatus.COMPLETED },
+      data: { status: TaskStatus.READY },
     })
 
     await this.prisma.player.update({
@@ -229,7 +230,8 @@ export class TaskService {
       where: { referrerId: player.id },
     })
 
-    if (taskOnPlayer.status === TaskStatus.COMPLETED) {
+    if (taskOnPlayer.status === TaskStatus.COMPLETED 
+      || taskOnPlayer.status === TaskStatus.READY) {
       return 
     }
 
@@ -247,14 +249,8 @@ export class TaskService {
 
     await this.prisma.taskOnPlayer.update({
       where: { id: taskOnPlayer.id },
-      data: { status: TaskStatus.COMPLETED },
+      data: { status: TaskStatus.READY },
     })
-
-    await this.prisma.player.update({
-      where: { id: player.id },
-      data: { balance: { increment: task.baunty } },
-    })
-
   }
 
   async checkDailyMinigame(player: Player, task: TaskOnPlayer) {
@@ -288,6 +284,44 @@ export class TaskService {
       where: { id: taskOnPlayer.id },
       data: { status: TaskStatus.PENDING },
     })
+  }
+
+  async getTaskBaunty(player: Player, taskId: string) {
+    const task = await this.prisma.taskOnPlayer.findUnique({
+      where: { id: taskId },
+      include: {
+        templateTask: true, // Включаем информацию о шаблоне задания
+      },
+    })
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    if(task.status === TaskStatus.COMPLETED) {
+      throw new HttpException('Task already completed', HttpStatus.BAD_REQUEST);
+    }
+
+    if(task.status === TaskStatus.READY) {
+      
+      await this.prisma.taskOnPlayer.update({
+        where: { id: task.id },
+        data: { status: TaskStatus.PENDING },
+      })
+
+      await this.prisma.player.update({
+        where: { id: player.id },
+        data: { balance: { increment: task.templateTask.baunty } },
+      })
+    }
+    
+    const updatedTasks = await this.prisma.taskOnPlayer.findMany({
+      where: { playerId: player.id },
+      include: {
+        templateTask: true, // Включаем информацию о шаблоне задания
+      },
+    });
+    return updatedTasks;
+
   }
 
 }

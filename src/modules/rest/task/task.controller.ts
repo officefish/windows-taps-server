@@ -54,4 +54,27 @@ export class TaskController {
     return await this.service.checkCurrentTaskStatus(player)
   }
 
+  @UseGuards(PlayerGuard)
+  @Post('baunty')
+  @Player()
+  async getTaskBaunty(
+    @Body() body: {taskId?: string},
+    @Req() req: FastifyRequest,
+  ) {
+    // Получаем игрока и его предметы
+    const { tgId } = req.currentUser
+    const { taskId } = body
+
+    /* Player */     
+    const player = await this.prisma.player.findUnique({ where: { tgId }})
+    if (!player) {
+      throw new NotFoundException('User not found');
+    }
+
+    return await this.service.getTaskBaunty(player, taskId)
+
+    
+  }
+
+
 }

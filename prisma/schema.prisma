@@ -209,6 +209,7 @@ enum TaskType {
 enum TaskStatus {
   PENDING
   IN_PROGRESS
+  READY
   COMPLETED
 }
 
