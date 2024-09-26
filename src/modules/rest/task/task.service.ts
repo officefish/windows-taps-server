@@ -305,7 +305,7 @@ export class TaskService {
       
       await this.prisma.taskOnPlayer.update({
         where: { id: task.id },
-        data: { status: TaskStatus.PENDING },
+        data: { status: TaskStatus.COMPLETED },
       })
 
       await this.prisma.player.update({
