@@ -32,11 +32,14 @@ export class TaskService {
             type: TaskType.DAILY_BAUNTY,
             title: 'Ежидневная награда',
             baunty: 150,
-            bonus: 30
+            bonus: 30,
+            navigate: '/daily-quest'
           },
           {
             type: TaskType.DAILY_MINIGAME,
             title: 'Мини игра',
+            navigate: '/minigame',
+            baunty: 500,
           }
         ],
         season: [
