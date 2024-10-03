@@ -39,7 +39,7 @@ model Player {
   username              String                  @map("user_name")
 
   active                Boolean                 @default(true) @map("active")
-  incomePerHour         Float                   @default(0) @map("income_per_hour")
+  incomePerHour         Int                     @default(0) @map("income_per_hour")
   lastIncomeUpdate      DateTime                @default(now()) @map("last_income_update")
 
   imageUrl              String?                 @map("image_url")
@@ -47,10 +47,10 @@ model Player {
   firstName             String?                  @map("first_name")
   lastName              String?                  @map("last_name")
 
-  balance               Float                   @default(0)  
+  balance               Int                   @default(0)  
 
-  energyLatest           Float                   @default(300) @map("energy_latest")
-  energyMax              Float                   @default(300) @map("energy_max")
+  energyLatest          Float                   @default(300) @map("energy_latest")
+  energyMax             Float                   @default(300) @map("energy_max")
   // Скорость восстановления энергии в единицах/секундах
   recoveryRate          Float                   @default(1) @map("recovery_rate")
   // Время последнего обновления энергии
@@ -113,11 +113,11 @@ model DailyQuest {
   
   dailyQuestStreak Int     @default(0)    @map("daily_quest_streak") // Сколько дней подряд забирает награду
   lastDailyClaim   DateTime?              @map("last_daily_claim")    // Дата последнего забора награды
-  dailyBaseReward  Float   @default(100)  @map("daily_base_reward")   // Базовая награда
-  dailyMaxBonus    Float   @default(200)  @map("daily_max_bonus")     // Максимальный бонус
-  dailyMaxStreak   Int     @default(14)   @map("daily_max_streak")    // Максимальный стрик для получения бонуса
+  dailyBaseReward  Int     @default(200)  @map("daily_base_reward")   // Базовая награда
+  dailyBonus       Int     @default(50)   @map("daily_max_bonus")     // Максимальный бонус
+  dailyMaxStreak   Int     @default(8)    @map("daily_max_streak")    // Максимальный стрик для получения бонуса
 
-   @@map("daily_quest")
+  @@map("daily_quest")
 }
   
 

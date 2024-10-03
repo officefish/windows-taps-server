@@ -3,6 +3,10 @@ import { PrismaService } from "@/modules/prisma/prisma.service"; // Подклю
 import { Player } from '@prisma/client';
 import { addHours, addMinutes, isBefore, subHours } from 'date-fns';
 
+import { add, differenceInCalendarDays, startOfDay } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
+
+const MOSCOW_TIMEZONE = 'Europe/Moscow';
 
 @Injectable()
 export class QuestService {
@@ -50,10 +54,6 @@ export class QuestService {
               tgId: tgId,
             },
           },
-          dailyQuestStreak: 0, // Устанавливаем начальные значения
-          dailyBaseReward: 100,
-          dailyMaxBonus: 200,
-          dailyMaxStreak: 14,
           lastDailyClaim: thirtyDaysAgo, // Последний раз не брал награду
         },
       });
@@ -68,7 +68,7 @@ export class QuestService {
     dailyQuestStreak?: number;
     lastDailyClaim?: Date | null;
     dailyBaseReward?: number;
-    dailyMaxBonus?: number;
+    dailyBonus?: number;
     dailyMaxStreak?: number;
   }) {
     try {
@@ -78,7 +78,7 @@ export class QuestService {
           dailyQuestStreak: dailyQuest.dailyQuestStreak,
           lastDailyClaim: dailyQuest.lastDailyClaim,
           dailyBaseReward: dailyQuest.dailyBaseReward,
-          dailyMaxBonus: dailyQuest.dailyMaxBonus,
+          dailyBonus: dailyQuest.dailyBonus,
           dailyMaxStreak: dailyQuest.dailyMaxStreak,
         },
       });
@@ -94,35 +94,41 @@ export class QuestService {
   async claimDailyReward(tgId: string) {
 
     const dailyQuest = await this.getDailyQuestByTgId(tgId);
-      
-    const today = new Date();
-    const oneDay = 24 * 60 * 60 * 1000; // Количество миллисекунд в дне
-
+  
+    const now = new Date();
+    const moscowTimeNow = toZonedTime(now, MOSCOW_TIMEZONE);
+    const todayStart = startOfDay(moscowTimeNow);
+  
     if (dailyQuest.lastDailyClaim) {
-      const lastClaimDate = new Date(dailyQuest.lastDailyClaim);
-      const daysSinceLastClaim = Math.floor((today.getTime() - lastClaimDate.getTime()) / oneDay);
-
-      // Проверка: если прошло больше 1 дня, стрик сбрасывается
+      const lastClaimInMoscowTime = toZonedTime(dailyQuest.lastDailyClaim, MOSCOW_TIMEZONE);
+      const daysSinceLastClaim = differenceInCalendarDays(todayStart, startOfDay(lastClaimInMoscowTime));
+  
+      // Если награда уже забрана сегодня
+      if (daysSinceLastClaim === 0) {
+        throw new Error('Daily reward already claimed today.');
+      }
+  
+      // Если пропущен один день, сбрасываем стрик
       if (daysSinceLastClaim > 1) {
-        dailyQuest.dailyQuestStreak = 0; // Сброс стрика
+        dailyQuest.dailyQuestStreak = 0;
       }
     }
-
-    // Увеличиваем стрик, но не больше значения dailyMaxStreak
+  
+    // Увеличиваем стрик на 1
     dailyQuest.dailyQuestStreak = Math.min(dailyQuest.dailyQuestStreak + 1, dailyQuest.dailyMaxStreak);
+  
+    // Рассчитываем награду
+    const totalReward = dailyQuest.dailyBaseReward + (dailyQuest.dailyBonus * dailyQuest.dailyQuestStreak);  
+    
+    // Обновляем запись в базе данных
+    await this.prisma.dailyQuest.update({
+      where: { id: dailyQuest.id },
+      data: {
+        dailyQuestStreak: dailyQuest.dailyQuestStreak,
+        lastDailyClaim: now,
+      },
+    });
 
-    // Рассчитываем бонус на основе стрика
-    const bonusFactor = dailyQuest.dailyQuestStreak / dailyQuest.dailyMaxStreak;
-    const bonus = Math.ceil(bonusFactor * dailyQuest.dailyMaxBonus);
-    const totalReward = dailyQuest.dailyBaseReward + bonus;
-
-    // Обновляем дату последнего забора награды
-    dailyQuest.lastDailyClaim = today;
-
-    // Сохраняем изменения в базе данных
-    await this.updateDailyQuest(dailyQuest);
-
-    // Увеличиваем баланс игрока
     let player = await this.prisma.player.findUnique({
       where: { tgId: tgId },
     });
@@ -130,49 +136,56 @@ export class QuestService {
       where: { tgId: tgId },
       data: { balance: player.balance + totalReward },
     });
-
+  
     return {
-      //message: `Вы получили ${totalReward} единиц награды! Ваш стрик: ${dailyQuest.dailyQuestStreak} дней подряд.`,
-      totalReward,
-      dailyQuestStreak: dailyQuest.dailyQuestStreak,
+      //message: 'Daily reward claimed successfully!',
+      dailyReward: {
+        streak: dailyQuest.dailyQuestStreak,
+        baseReward: dailyQuest.dailyBaseReward, // Базовая награда
+        bonus: dailyQuest.dailyBonus,           // Бонус за каждый день
+        maxStreak: dailyQuest.dailyMaxStreak,   
+        claimedToday: true,
+      },
       balance: player.balance,
-    }
+       
+    };
   }
 
   async getDailyRewardInfo(player: Player) {
     // Получаем данные о игроке и его ежедневном квесте
     const dailyQuest = await this.getDailyQuestByTgId(player.tgId);
-  
-    const today = new Date();
-    const oneDay = 24 * 60 * 60 * 1000; // Количество миллисекунд в дне
+    
+    const now = new Date();
+    const moscowTimeNow = toZonedTime(now, MOSCOW_TIMEZONE);
+    const todayStart = startOfDay(moscowTimeNow);
+
     let claimedToday = false;
   
     if (dailyQuest.lastDailyClaim) {
-      const lastClaimDate = new Date(dailyQuest.lastDailyClaim);
-      const daysSinceLastClaim = Math.floor((today.getTime() - lastClaimDate.getTime()) / oneDay);
+      const lastClaimInMoscowTime = toZonedTime(dailyQuest.lastDailyClaim, MOSCOW_TIMEZONE);
+      const daysSinceLastClaim = differenceInCalendarDays(todayStart, startOfDay(lastClaimInMoscowTime));
   
-      // Проверяем, забирал ли игрок награду сегодня
+      // Если награда уже забрана сегодня
       if (daysSinceLastClaim === 0) {
         claimedToday = true;
       }
   
-      // Если прошло больше одного дня, то стрик сбрасывается
+      // Если пропущен один день, сбрасываем стрик
       if (daysSinceLastClaim > 1) {
         dailyQuest.dailyQuestStreak = 0;
       }
     }
   
-    // Рассчитываем следующую награду, которую получит игрок при продолжении забора наград
-    const nextStreak = Math.min(dailyQuest.dailyQuestStreak + 1, dailyQuest.dailyMaxStreak);
-    const bonusFactor = nextStreak / dailyQuest.dailyMaxStreak;
-    const nextBonus = bonusFactor * dailyQuest.dailyMaxBonus;
-    const nextReward = Math.ceil(dailyQuest.dailyBaseReward + nextBonus);
-  
+    // Увеличиваем стрик на 1
+    dailyQuest.dailyQuestStreak = Math.min(dailyQuest.dailyQuestStreak + 1, dailyQuest.dailyMaxStreak);
+    
     // Формируем ответ
     return {
       claimedToday,                          // Забирал ли игрок награду сегодня
       streak: dailyQuest.dailyQuestStreak,    // Текущий стрик (количество дней подряд)
-      nextReward                             // Награда за следующий день
+      baseReward: dailyQuest.dailyBaseReward, // Базовая награда
+      bonus: dailyQuest.dailyBonus,           // Бонус за каждый день
+      maxStreak: dailyQuest.dailyMaxStreak,   // Максимальный стрик 
     };
   }
 

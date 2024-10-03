@@ -31,15 +31,15 @@ export class TaskService {
           { 
             type: TaskType.DAILY_BAUNTY,
             title: 'Ежидневная награда',
-            baunty: 150,
-            bonus: 30,
+            baunty: 200,
+            bonus: 50,
             navigate: '/daily-quest'
           },
           {
             type: TaskType.DAILY_MINIGAME,
             title: 'Мини игра',
             navigate: '/minigame',
-            baunty: 500,
+            baunty: 300,
           }
         ],
         season: [
@@ -47,7 +47,8 @@ export class TaskService {
                 type: TaskType.INVITE_COUNT,
                 title: 'Пригласи трех друзей',
                 target: 3,
-                baunty: 2000,
+                baunty: 7500,
+                navigate: '/friends',
                 expiresAt,
             },
             { 
@@ -55,7 +56,7 @@ export class TaskService {
                 content: 'portal_okon',
                 navigate: 'https://t.me/portal_okon',
                 title: 'Подпишись на канал',
-                baunty: 2000,
+                baunty: 2500,
                 expiresAt,
             }
         ]
@@ -220,11 +221,6 @@ export class TaskService {
       data: { status: TaskStatus.READY },
     })
 
-    await this.prisma.player.update({
-      where: { id: player.id },
-      data: { balance: { increment: task.baunty } },
-    })
-
   }
 
   // Проверка количества приглашений
@@ -259,7 +255,6 @@ export class TaskService {
   async checkDailyMinigame(player: Player, task: TaskOnPlayer) {
     const status = await this.quest.isGameAvailable(player);
     if (status.isBlocked) {
-      
       // we also can change task status to pending or completed depends on remaining time
       await this.prisma.taskOnPlayer.update({
         where: { id: task.id },

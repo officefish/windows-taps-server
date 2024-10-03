@@ -25,19 +25,19 @@ export class ShopService {
      // Создание категорий и товаров
       const categories = {
         MIND: [
-          { name: 'School', income: 50, cost: 300, imageUrl:'shop/school.jpg', dependencies: [] },
-          { name: 'Institute', income: 300, cost: 3500, imageUrl:'shop/university.jpg', dependencies: [{name:'School', level: 1}] },
-          { name: 'Friends', income: 120, cost: 800, imageUrl:'shop/friends.jpg', dependencies: [] },
+          { name: 'School', income: 50, cost: 300, imageUrl:'shop/mind/school.png', dependencies: [] },
+          { name: 'Institute', income: 300, cost: 3500, imageUrl:'shop/mind/university.png', dependencies: [{name:'School', level: 1}] },
+          { name: 'Friends', income: 120, cost: 800, imageUrl:'shop/mind/friends.png', dependencies: [] },
         ],
         PHYSICAL_EDUCATION: [
-          { name: 'Exercises', income: 150, cost: 750, imageUrl:'shop/fitness.jpg', dependencies: [] },
-          { name: 'Gym', income: 200, cost: 1000, imageUrl:'shop/fitness-room.jpg', dependencies: [{name:'Exercises', level: 1}] },
+          { name: 'Exercises', income: 150, cost: 750, imageUrl:'shop/sport/workout.png', dependencies: [] },
+          { name: 'Gym', income: 200, cost: 1000, imageUrl:'shop/sport/gym.png', dependencies: [{name:'Exercises', level: 1}] },
         ],
         CLOTHES: [
-          { name: 'Cap', income: 50, cost: 300, imageUrl:"shop/cap.jpg", dependencies: [] },
-          { name: 'Raincoat', income: 50, cost: 300, imageUrl:"shop/windbreaker.jpg", dependencies: [] },
-          { name: 'Boots', income: 50, cost: 300, imageUrl:"shop/shoes.jpg", dependencies: [] },
-          { name: 'Jacket', income: 100, cost: 500, imageUrl:"shop/shoes.jpg", dependencies: [] },
+          { name: 'Cap', income: 50, cost: 300, imageUrl:"shop/clothes/cap.png", dependencies: [] },
+          { name: 'Raincoat', income: 50, cost: 300, imageUrl:"shop/clothes/raincoat.png", dependencies: [] },
+          { name: 'Boots', income: 50, cost: 300, imageUrl:"shop/clothes/sneakers.png", dependencies: [] },
+          { name: 'Jacket', income: 100, cost: 500, imageUrl:"shop/clothes/jacket.png", dependencies: [] },
         ],
       };
 
